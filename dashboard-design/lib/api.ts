@@ -6,11 +6,24 @@
  */
 
 // API Configuration
-// In production, use relative URL since frontend and backend are on same domain
 // In development, use localhost:3001 for the backend
-const API_BASE_URL = process.env.NODE_ENV === 'production'
-  ? ''
-  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001')
+// In production, use the backend Railway URL from environment variable
+// If not set, assume backend is on same domain (relative URLs)
+const getApiBaseUrl = () => {
+  if (process.env.NODE_ENV === 'production') {
+    const envUrl = process.env.NEXT_PUBLIC_API_URL
+    if (envUrl) {
+      // Ensure URL has protocol
+      return envUrl.startsWith('http') ? envUrl : `https://${envUrl}`
+    }
+    // No backend URL configured, use relative path (same domain)
+    return ''
+  }
+  // Development
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+}
+
+const API_BASE_URL = getApiBaseUrl()
 
 // Types matching the backend responses
 export interface DashboardStats {
