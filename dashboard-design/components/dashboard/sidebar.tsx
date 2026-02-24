@@ -140,7 +140,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   <TooltipTrigger asChild>
                     {linkContent}
                   </TooltipTrigger>
-                  <TooltipContent side="right" className="bg-white border border-border/50 shadow-md">
+                  <TooltipContent side="right" className="bg-white border border-border/50 shadow-md text-foreground">
                     {item.label}
                   </TooltipContent>
                 </Tooltip>
@@ -196,7 +196,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                     <LogOut className="h-4 w-4" strokeWidth={2} />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="right" className="bg-white border border-border/50 shadow-md">
+                <TooltipContent side="right" className="bg-white border border-border/50 shadow-md text-foreground">
                   Sair
                 </TooltipContent>
               </Tooltip>
