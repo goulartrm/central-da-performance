@@ -317,15 +317,12 @@ export default async function authRoutes(fastify: FastifyInstance) {
         })
       }
 
-      // Use normalized email
-      const email = normalizedEmail
-
-      // Check if user already exists
+      // Check if user already exists (use normalized email)
       const [existingUser] = await withRetry(() =>
         db
           .select()
           .from(users)
-          .where(eq(users.email, email))
+          .where(eq(users.email, normalizedEmail))
           .limit(1)
       )
 
@@ -370,7 +367,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
           .insert(users)
           .values({
             id: userId,
-            email,
+            email: normalizedEmail,
             password_hash: passwordHash,
             organization_id: organizationId,
             role: 'superadmin',
