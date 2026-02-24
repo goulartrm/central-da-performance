@@ -1,0 +1,24 @@
+# Railway Configuration - Backend (Staging)
+
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+# Start command for staging
+startCommand = "bun run start"
+# Health check
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+# Automatic deployments on staging branch
+restartPolicyType = "ON_FAILURE"
+
+[[services.ports]]
+# Railway sets PORT automatically, we use 3001 locally
+port = 3001
+
+# Environment-specific configuration
+[environments.staging]
+# Staging uses staging database
+[environments.stailability.deploy]
+# Enable automatic deploys from staging branch
+[environments.stability.deploy]

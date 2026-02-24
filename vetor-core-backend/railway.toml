@@ -1,0 +1,22 @@
+# Railway Configuration - Backend (Production)
+
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+# Start command for production
+startCommand = "bun run start"
+# Health check
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+# Restart on failure
+restartPolicyType = "ON_FAILURE"
+# Zero-downtime deployments
+numReplicas = 2
+
+[[services.ports]]
+# Railway sets PORT automatically
+port = 3001
+
+[build.env]
+NODE_ENV = "production"

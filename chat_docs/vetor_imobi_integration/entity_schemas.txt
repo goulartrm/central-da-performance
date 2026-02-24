@@ -1,0 +1,1308 @@
+{
+  "name": "Client",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string"
+    },
+    "agent_email": {
+      "type": "string"
+    },
+    "assigned_by": {
+      "type": "string",
+      "format": "email",
+      "description": "Email do admin que atribuiu este cliente para o agent_email atual"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "new",
+        "active",
+        "inactive",
+        "owner",
+        "buyer"
+      ],
+      "default": "new"
+    },
+    "is_archived": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se o cliente foi arquivado (soft delete)"
+    },
+    "archived_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data e hora do arquivamento"
+    },
+    "archived_by": {
+      "type": "string",
+      "description": "Email do usu\u00e1rio que arquivou"
+    },
+    "sdr_session_id": {
+      "type": "string",
+      "description": "ID da sess\u00e3o de conversa do AI SDR no Supabase"
+    },
+    "first_name": {
+      "type": "string"
+    },
+    "last_name": {
+      "type": "string"
+    },
+    "full_name": {
+      "type": "string",
+      "description": "Auto-concatenado de first_name e last_name."
+    },
+    "cpf_cnpj": {
+      "type": "string"
+    },
+    "rg": {
+      "type": "string"
+    },
+    "birth_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "marital_status": {
+      "type": "string",
+      "enum": [
+        "solteiro",
+        "casado",
+        "divorciado",
+        "viuvo",
+        "uniao_estavel"
+      ]
+    },
+    "spouse_name": {
+      "type": "string"
+    },
+    "spouse_cpf": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "phone_primary": {
+      "type": "string"
+    },
+    "phone_secondary": {
+      "type": "string"
+    },
+    "preferred_contact": {
+      "type": "string",
+      "enum": [
+        "whatsapp",
+        "phone",
+        "email"
+      ]
+    },
+    "capture_source": {
+      "type": "string",
+      "enum": [
+        "portal",
+        "instagram",
+        "indication",
+        "walk_in",
+        "website",
+        "facebook_lead_ads",
+        "facebook_click_to_whatsapp",
+        "instagram_messaging"
+      ]
+    },
+    "occupation": {
+      "type": "string"
+    },
+    "income_min": {
+      "type": "number",
+      "default": 0,
+      "description": "Renda m\u00ednima declarada."
+    },
+    "income_max": {
+      "type": "number",
+      "default": 0,
+      "description": "Renda m\u00e1xima declarada."
+    },
+    "credit_approved": {
+      "type": "boolean",
+      "default": false
+    },
+    "address_cep": {
+      "type": "string"
+    },
+    "address_street": {
+      "type": "string"
+    },
+    "address_number": {
+      "type": "string"
+    },
+    "address_complement": {
+      "type": "string"
+    },
+    "address_neighborhood": {
+      "type": "string"
+    },
+    "address_city": {
+      "type": "string"
+    },
+    "address_state": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "string"
+    },
+    "consent_marketing": {
+      "type": "boolean",
+      "default": false,
+      "description": "Consentimento para marketing (LGPD)."
+    },
+    "lead_score": {
+      "type": "number",
+      "default": 0
+    },
+    "last_contact_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "portal_lead_id": {
+      "type": "string"
+    },
+    "profile_transaction_type": {
+      "type": "string",
+      "enum": [
+        "sale",
+        "rent"
+      ]
+    },
+    "profile_category": {
+      "type": "string",
+      "enum": [
+        "commercial",
+        "industrial",
+        "developments",
+        "residential",
+        "land"
+      ]
+    },
+    "profile_bedrooms_min": {
+      "type": "number",
+      "default": 0
+    },
+    "profile_bedrooms_max": {
+      "type": "number",
+      "default": 0
+    },
+    "profile_price_min": {
+      "type": "number",
+      "default": 0
+    },
+    "profile_price_max": {
+      "type": "number",
+      "default": 0
+    },
+    "property_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "first_name",
+    "last_name",
+    "phone_primary",
+    "capture_source"
+  ],
+  "indexes": [
+    {
+      "fields": [
+        "company_id"
+      ]
+    },
+    {
+      "fields": [
+        "agent_email"
+      ]
+    },
+    {
+      "fields": [
+        "assigned_by"
+      ]
+    },
+    {
+      "fields": [
+        "is_archived"
+      ]
+    },
+    {
+      "fields": [
+        "status"
+      ]
+    },
+    {
+      "fields": [
+        "capture_source"
+      ]
+    },
+    {
+      "fields": [
+        "created_date"
+      ]
+    },
+    {
+      "fields": [
+        "full_name"
+      ]
+    },
+    {
+      "fields": [
+        "email"
+      ]
+    },
+    {
+      "fields": [
+        "phone_primary"
+      ]
+    },
+    {
+      "fields": [
+        "sdr_session_id"
+      ]
+    }
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.agent_email": "{{user.email}}"
+        },
+        {
+          "$and": [
+            {
+              "data.company_id": "{{user.data.company_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "email": "goulartrm@gmail.com"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "system"
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "data.agent_email": "{{user.email}}"
+        },
+        {
+          "$and": [
+            {
+              "data.company_id": "{{user.data.company_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "email": "goulartrm@gmail.com"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "system"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.agent_email": "{{user.email}}"
+        },
+        {
+          "$and": [
+            {
+              "data.company_id": "{{user.data.company_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "email": "goulartrm@gmail.com"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "system"
+          }
+        }
+      ]
+    }
+  }
+}
+
+
+
+
+{
+  "name": "Deal",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string"
+    },
+    "is_archived": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se o neg\u00f3cio foi arquivado (soft delete)"
+    },
+    "archived_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data e hora do arquivamento"
+    },
+    "archived_by": {
+      "type": "string",
+      "description": "Email do usu\u00e1rio que arquivou"
+    },
+    "agent_email": {
+      "type": "string",
+      "description": "Email do corretor respons\u00e1vel."
+    },
+    "assigned_by": {
+      "type": "string",
+      "format": "email",
+      "description": "Email do admin que atribuiu este neg\u00f3cio para o agent_email atual"
+    },
+    "sdr_session_id": {
+      "type": "string",
+      "description": "ID da sess\u00e3o de conversa do AI SDR no Supabase"
+    },
+    "title": {
+      "type": "string",
+      "description": "Nome descritivo do neg\u00f3cio."
+    },
+    "pipeline_type": {
+      "type": "string",
+      "enum": [
+        "prospeccao",
+        "plano_marketing",
+        "venda",
+        "aluguel"
+      ],
+      "description": "Tipo de funil ao qual o neg\u00f3cio pertence."
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "prospeccao_identificacao_proprietario",
+        "prospeccao_primeiro_contato",
+        "prospeccao_qualificacao_imovel",
+        "prospeccao_visita_tecnica",
+        "prospeccao_proposta_exclusividade",
+        "prospeccao_exclusividade_assinada",
+        "prospeccao_perdido",
+        "plano_marketing_preparacao",
+        "plano_marketing_materiais_prontos",
+        "plano_marketing_publicado",
+        "plano_marketing_revisoes_preco",
+        "plano_marketing_pronto_vendas",
+        "plano_marketing_encerrado",
+        "plano_marketing_nao_concluido",
+        "venda_lead_recebido",
+        "venda_qualificacao",
+        "venda_standby",
+        "venda_visita_agendada",
+        "venda_proposta_negociacao",
+        "venda_sinal_contrato",
+        "venda_fechado",
+        "venda_perdido",
+        "aluguel_lead_recebido",
+        "aluguel_qualificacao",
+        "aluguel_standby",
+        "aluguel_visita_agendada",
+        "aluguel_proposta",
+        "aluguel_analise_credito",
+        "aluguel_vistoria",
+        "aluguel_contrato_assinatura",
+        "aluguel_entrega_chaves",
+        "aluguel_perdido"
+      ],
+      "default": "prospeccao_identificacao_proprietario",
+      "description": "A etapa atual do neg\u00f3cio no funil."
+    },
+    "position": {
+      "type": "number",
+      "description": "Ordem do neg\u00f3cio dentro do est\u00e1gio no Kanban."
+    },
+    "potential_value": {
+      "type": "number",
+      "description": "O valor potencial do neg\u00f3cio."
+    },
+    "potential_commission": {
+      "type": "number",
+      "description": "Valor potencial de comiss\u00e3o do corretor neste neg\u00f3cio."
+    },
+    "expected_close_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Data prevista de fechamento."
+    },
+    "closing_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Data real de fechamento."
+    },
+    "client_id": {
+      "type": "string",
+      "description": "ID do cliente principal associado."
+    },
+    "property_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs das propriedades relacionadas."
+    },
+    "linked_deal_id": {
+      "type": "string",
+      "description": "Liga\u00e7\u00e3o entre capta\u00e7\u00e3o e plano de marketing."
+    },
+    "exclusividade": {
+      "type": "object",
+      "properties": {
+        "tem": {
+          "type": "boolean",
+          "default": false
+        },
+        "data_inicio": {
+          "type": "string",
+          "format": "date"
+        },
+        "data_fim": {
+          "type": "string",
+          "format": "date"
+        },
+        "contrato_url": {
+          "type": "string"
+        }
+      },
+      "description": "Informa\u00e7\u00f5es sobre exclusividade do im\u00f3vel."
+    },
+    "origem": {
+      "type": "string",
+      "description": "Origem do neg\u00f3cio (canal, refer\u00eancia, etc.)."
+    },
+    "source": {
+      "type": "string",
+      "description": "Fonte do neg\u00f3cio (ex.: Meta Lead Ads, WhatsApp, IG Messaging)"
+    },
+    "documents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "string"
+          },
+          "uploaded_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "description": "Documentos anexados ao neg\u00f3cio."
+    },
+    "last_activity_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp da \u00faltima atividade registrada no neg\u00f3cio."
+    },
+    "stage_entered_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp de quando o neg\u00f3cio entrou no est\u00e1gio atual."
+    },
+    "stage_history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "stage_from": {
+            "type": "string"
+          },
+          "stage_to": {
+            "type": "string"
+          },
+          "changed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "changed_by_email": {
+            "type": "string"
+          },
+          "changed_by_name": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Hist\u00f3rico de mudan\u00e7as de est\u00e1gio."
+    },
+    "has_property_conflict": {
+      "type": "boolean",
+      "default": false,
+      "description": "Flag indicando se as propriedades deste neg\u00f3cio est\u00e3o presentes em outros neg\u00f3cios abertos."
+    },
+    "perfil_quartos_min": {
+      "type": "number",
+      "description": "N\u00famero m\u00ednimo de quartos desejado pelo cliente (qualifica\u00e7\u00e3o venda)."
+    },
+    "perfil_quartos_max": {
+      "type": "number",
+      "description": "N\u00famero m\u00e1ximo de quartos desejado pelo cliente (qualifica\u00e7\u00e3o venda)."
+    },
+    "bairros_preferidos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Lista de bairros preferidos pelo cliente (qualifica\u00e7\u00e3o venda)."
+    },
+    "faixa_preco_min": {
+      "type": "number",
+      "description": "Valor m\u00ednimo da faixa de pre\u00e7o desejada pelo cliente."
+    },
+    "faixa_preco_max": {
+      "type": "number",
+      "description": "Valor m\u00e1ximo da faixa de pre\u00e7o desejada pelo cliente."
+    },
+    "tipo_garantia": {
+      "type": "string",
+      "enum": [
+        "fiador",
+        "seguro_fianca",
+        "caucao",
+        "carta_fianca",
+        "outros"
+      ],
+      "description": "Tipo de garantia para neg\u00f3cios de aluguel."
+    },
+    "aluguel_checklist": {
+      "type": "object",
+      "properties": {
+        "documentos_inquilino_ok": {
+          "type": "boolean",
+          "default": false
+        },
+        "analise_credito_status": {
+          "type": "string",
+          "enum": [
+            "pendente",
+            "aprovado",
+            "reprovado"
+          ],
+          "default": "pendente"
+        },
+        "vistoria_agendada_em": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "vistoria_laudo_url": {
+          "type": "string"
+        },
+        "seguro_fianca_ok": {
+          "type": "boolean",
+          "default": false
+        },
+        "contrato_url": {
+          "type": "string"
+        },
+        "chaves_entregues_em": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "description": "Checklist espec\u00edfico para neg\u00f3cios de aluguel."
+    },
+    "lost_reason": {
+      "type": "string",
+      "description": "Motivo da perda, caso aplic\u00e1vel."
+    },
+    "notes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es gerais sobre o neg\u00f3cio."
+    },
+    "meta_lead_id": {
+      "type": "string",
+      "description": "ID do lead do Meta (Facebook) que originou este neg\u00f3cio"
+    }
+  },
+  "required": [
+    "title",
+    "agent_email",
+    "pipeline_type",
+    "stage",
+    "potential_value",
+    "client_id"
+  ],
+  "indexes": [
+    {
+      "fields": [
+        "company_id"
+      ]
+    },
+    {
+      "fields": [
+        "agent_email"
+      ]
+    },
+    {
+      "fields": [
+        "assigned_by"
+      ]
+    },
+    {
+      "fields": [
+        "is_archived"
+      ]
+    },
+    {
+      "fields": [
+        "pipeline_type"
+      ]
+    },
+    {
+      "fields": [
+        "stage"
+      ]
+    },
+    {
+      "fields": [
+        "position"
+      ]
+    },
+    {
+      "fields": [
+        "client_id"
+      ]
+    },
+    {
+      "fields": [
+        "last_activity_at"
+      ]
+    },
+    {
+      "fields": [
+        "meta_lead_id"
+      ]
+    },
+    {
+      "fields": [
+        "sdr_session_id"
+      ]
+    },
+    {
+      "fields": [
+        "created_date"
+      ]
+    },
+    {
+      "fields": [
+        "updated_date"
+      ]
+    }
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.agent_email": "{{user.email}}"
+        },
+        {
+          "$and": [
+            {
+              "data.company_id": "{{user.data.company_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "email": "goulartrm@gmail.com"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "system"
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "data.agent_email": "{{user.email}}"
+        },
+        {
+          "$and": [
+            {
+              "data.company_id": "{{user.data.company_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "email": "goulartrm@gmail.com"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "system"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.agent_email": "{{user.email}}"
+        },
+        {
+          "$and": [
+            {
+              "data.company_id": "{{user.data.company_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "email": "goulartrm@gmail.com"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "system"
+          }
+        }
+      ]
+    }
+  }
+}
+
+
+{
+  "name": "Property",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string"
+    },
+    "agent_email": {
+      "type": "string"
+    },
+    "is_archived": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se a propriedade foi arquivada (soft delete)"
+    },
+    "archived_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data e hora do arquivamento"
+    },
+    "archived_by": {
+      "type": "string",
+      "description": "Email do usu\u00e1rio que arquivou"
+    },
+    "reference_code": {
+      "type": "string",
+      "description": "Auto-incrementing reference, can be handled by backend logic or hooks."
+    },
+    "title": {
+      "type": "string",
+      "description": "T\u00edtulo do an\u00fancio, 5-120 caracteres."
+    },
+    "website_title": {
+      "type": "string",
+      "description": "T\u00edtulo alternativo para exibi\u00e7\u00e3o no site"
+    },
+    "description": {
+      "type": "string",
+      "description": "Descri\u00e7\u00e3o detalhada do im\u00f3vel."
+    },
+    "internal_notes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es internas sobre o im\u00f3vel, vis\u00edvel apenas para corretores."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive",
+        "sold",
+        "rented",
+        "draft"
+      ],
+      "default": "draft",
+      "description": "Status atual da propriedade."
+    },
+    "transaction_type": {
+      "type": "string",
+      "enum": [
+        "sale",
+        "rent"
+      ],
+      "description": "Tipo de transa\u00e7\u00e3o."
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "commercial",
+        "industrial",
+        "developments",
+        "residential",
+        "land"
+      ],
+      "description": "Categoria principal do im\u00f3vel."
+    },
+    "sub_category": {
+      "type": "string",
+      "description": "Sub-categoria, dependente da categoria principal."
+    },
+    "condominio": {
+      "type": "string",
+      "description": "Nome do condom\u00ednio"
+    },
+    "cep": {
+      "type": "string",
+      "description": "CEP do im\u00f3vel (8 d\u00edgitos)."
+    },
+    "street": {
+      "type": "string",
+      "description": "Nome da rua/logradouro."
+    },
+    "number": {
+      "type": "string",
+      "description": "N\u00famero do im\u00f3vel."
+    },
+    "complement": {
+      "type": "string",
+      "description": "Complemento do endere\u00e7o (opcional)."
+    },
+    "neighborhood": {
+      "type": "string",
+      "description": "Bairro."
+    },
+    "city": {
+      "type": "string",
+      "description": "Cidade."
+    },
+    "state": {
+      "type": "string",
+      "description": "Estado (UF)."
+    },
+    "latitude": {
+      "type": "number",
+      "description": "Latitude para mapa."
+    },
+    "longitude": {
+      "type": "number",
+      "description": "Longitude para mapa."
+    },
+    "bedrooms": {
+      "type": "number",
+      "default": 0
+    },
+    "suites": {
+      "type": "number",
+      "default": 0
+    },
+    "bathrooms": {
+      "type": "number",
+      "default": 0
+    },
+    "living_rooms": {
+      "type": "number",
+      "default": 0
+    },
+    "parking_spots": {
+      "type": "number",
+      "default": 0
+    },
+    "built_area": {
+      "type": "number",
+      "description": "\u00c1rea constru\u00edda em m\u00b2."
+    },
+    "land_area": {
+      "type": "number",
+      "description": "\u00c1rea do terreno em m\u00b2."
+    },
+    "floor": {
+      "type": "number",
+      "default": 0
+    },
+    "year_built": {
+      "type": "number"
+    },
+    "furnished": {
+      "type": "boolean",
+      "default": false
+    },
+    "pets_allowed": {
+      "type": "boolean",
+      "default": false
+    },
+    "accessibility": {
+      "type": "boolean",
+      "default": false
+    },
+    "sale_price": {
+      "type": "number",
+      "default": 0
+    },
+    "rent_price": {
+      "type": "number",
+      "default": 0
+    },
+    "old_price": {
+      "type": "number",
+      "description": "Pre\u00e7o anterior, para indicar altera\u00e7\u00e3o."
+    },
+    "condo_fee": {
+      "type": "number",
+      "default": 0,
+      "description": "Taxa de condom\u00ednio."
+    },
+    "iptu": {
+      "type": "number",
+      "default": 0,
+      "description": "Valor do IPTU."
+    },
+    "commission_percentage": {
+      "type": "number",
+      "description": "Percentual de comiss\u00e3o."
+    },
+    "display_on_website": {
+      "type": "boolean",
+      "default": false
+    },
+    "publicar_em_portais": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se o im\u00f3vel deve ser publicado nos portais imobili\u00e1rios"
+    },
+    "web_highlight": {
+      "type": "boolean",
+      "default": false
+    },
+    "super_highlight": {
+      "type": "boolean",
+      "default": false
+    },
+    "launch": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u00c9 um lan\u00e7amento?"
+    },
+    "exclusive": {
+      "type": "boolean",
+      "default": false
+    },
+    "air_conditioning": {
+      "type": "boolean",
+      "default": false
+    },
+    "balcony": {
+      "type": "boolean",
+      "default": false
+    },
+    "barbecue_grill": {
+      "type": "boolean",
+      "default": false
+    },
+    "fireplace": {
+      "type": "boolean",
+      "default": false
+    },
+    "solar_water_heating": {
+      "type": "boolean",
+      "default": false
+    },
+    "closet": {
+      "type": "boolean",
+      "default": false
+    },
+    "integrated_kitchen": {
+      "type": "boolean",
+      "default": false
+    },
+    "pantry": {
+      "type": "boolean",
+      "default": false
+    },
+    "service_area": {
+      "type": "boolean",
+      "default": false
+    },
+    "home_office": {
+      "type": "boolean",
+      "default": false
+    },
+    "private_pool": {
+      "type": "boolean",
+      "default": false
+    },
+    "whirlpool": {
+      "type": "boolean",
+      "default": false
+    },
+    "collective_pool": {
+      "type": "boolean",
+      "default": false
+    },
+    "playground": {
+      "type": "boolean",
+      "default": false
+    },
+    "gym": {
+      "type": "boolean",
+      "default": false
+    },
+    "ballroom": {
+      "type": "boolean",
+      "default": false
+    },
+    "game_room": {
+      "type": "boolean",
+      "default": false
+    },
+    "sauna": {
+      "type": "boolean",
+      "default": false
+    },
+    "elevator": {
+      "type": "boolean",
+      "default": false
+    },
+    "concierge_24h": {
+      "type": "boolean",
+      "default": false
+    },
+    "cctv": {
+      "type": "boolean",
+      "default": false
+    },
+    "electronic_doorman": {
+      "type": "boolean",
+      "default": false
+    },
+    "images": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "URLs das imagens/fotos."
+    },
+    "images_thumbnails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "URLs das thumbnails das imagens (mesma ordem de images)."
+    },
+    "image_processing_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "processing",
+        "completed",
+        "failed"
+      ],
+      "description": "Status do processamento de imagens externas"
+    },
+    "video_url": {
+      "type": "string",
+      "description": "URL do v\u00eddeo do im\u00f3vel."
+    },
+    "virtual_tour_url": {
+      "type": "string",
+      "description": "URL do tour virtual."
+    },
+    "client_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "owner_client_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs dos clientes propriet\u00e1rios do im\u00f3vel"
+    },
+    "source_url": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "category",
+    "transaction_type",
+    "city",
+    "state",
+    "street",
+    "number",
+    "neighborhood"
+  ],
+  "indexes": [
+    {
+      "fields": [
+        "company_id"
+      ]
+    },
+    {
+      "fields": [
+        "agent_email"
+      ]
+    },
+    {
+      "fields": [
+        "is_archived"
+      ]
+    },
+    {
+      "fields": [
+        "status"
+      ]
+    },
+    {
+      "fields": [
+        "category"
+      ]
+    },
+    {
+      "fields": [
+        "transaction_type"
+      ]
+    },
+    {
+      "fields": [
+        "created_date"
+      ]
+    }
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.company_id": "{{user.data.company_id}}"
+        },
+        {
+          "user_condition": {
+            "email": "goulartrm@gmail.com"
+          }
+        }
+      ]
+    },
+    "write": {
+      "$or": [
+        {
+          "data.agent_email": "{{user.email}}"
+        },
+        {
+          "$and": [
+            {
+              "data.company_id": "{{user.data.company_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "email": "goulartrm@gmail.com"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "system"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.agent_email": "{{user.email}}"
+        },
+        {
+          "$and": [
+            {
+              "data.company_id": "{{user.data.company_id}}"
+            },
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "email": "goulartrm@gmail.com"
+          }
+        }
+      ]
+    }
+  }
+}
+
+

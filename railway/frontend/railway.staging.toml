@@ -1,0 +1,24 @@
+# Railway Configuration - Frontend (Staging)
+
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+# Start command for staging
+startCommand = "bun run start"
+# Health check
+healthcheckPath = "/"
+healthcheckTimeout = 300
+# Automatic deployments on staging branch
+restartPolicyType = "ON_FAILURE"
+
+[[services.ports]]
+# Railway sets PORT automatically, we use 3000 locally
+port = 3000
+
+[build.env]
+NODE_ENV = "staging"
+NEXT_PUBLIC_ENVIRONMENT = "staging"
+
+# Staging will use staging backend URL
+# Set this in Railway dashboard: NEXT_PUBLIC_API_URL=https://staging-backend.your-domain.railway.app

@@ -1,0 +1,27 @@
+// JavaScript Example: Reading Entities
+// Filterable fields: company_id, agent_email, is_archived, archived_at, archived_by, reference_code, title, website_title, description, internal_notes, status, transaction_type, category, sub_category, condominio, cep, street, number, complement, neighborhood, city, state, latitude, longitude, bedrooms, suites, bathrooms, living_rooms, parking_spots, built_area, land_area, floor, year_built, furnished, pets_allowed, accessibility, sale_price, rent_price, old_price, condo_fee, iptu, commission_percentage, display_on_website, publicar_em_portais, web_highlight, super_highlight, launch, exclusive, air_conditioning, balcony, barbecue_grill, fireplace, solar_water_heating, closet, integrated_kitchen, pantry, service_area, home_office, private_pool, whirlpool, collective_pool, playground, gym, ballroom, game_room, sauna, elevator, concierge_24h, cctv, electronic_doorman, images, images_thumbnails, image_processing_status, video_url, virtual_tour_url, client_ids, owner_client_ids, source_url
+async function fetchPropertyEntities() {
+    const response = await fetch(`https://app.base44.com/api/apps/687412c6a963138588a2720b/entities/Property`, {
+        headers: {
+            'api_key': 'API_KEY', // or use await User.me() to get the API key
+            'Content-Type': 'application/json'
+        }
+    });
+    const data = await response.json();
+    console.log(data);
+}
+
+// JavaScript Example: Updating an Entity
+// Filterable fields: company_id, agent_email, is_archived, archived_at, archived_by, reference_code, title, website_title, description, internal_notes, status, transaction_type, category, sub_category, condominio, cep, street, number, complement, neighborhood, city, state, latitude, longitude, bedrooms, suites, bathrooms, living_rooms, parking_spots, built_area, land_area, floor, year_built, furnished, pets_allowed, accessibility, sale_price, rent_price, old_price, condo_fee, iptu, commission_percentage, display_on_website, publicar_em_portais, web_highlight, super_highlight, launch, exclusive, air_conditioning, balcony, barbecue_grill, fireplace, solar_water_heating, closet, integrated_kitchen, pantry, service_area, home_office, private_pool, whirlpool, collective_pool, playground, gym, ballroom, game_room, sauna, elevator, concierge_24h, cctv, electronic_doorman, images, images_thumbnails, image_processing_status, video_url, virtual_tour_url, client_ids, owner_client_ids, source_url
+async function updatePropertyEntity(entityId, updateData) {
+    const response = await fetch(`https://app.base44.com/api/apps/687412c6a963138588a2720b/entities/Property/${entityId}`, {
+        method: 'PUT',
+        headers: {
+            'api_key': 'API_KEY', // or use await User.me() to get the API key
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updateData)
+    });
+    const data = await response.json();
+    console.log(data);
+}

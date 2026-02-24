@@ -1,0 +1,12 @@
+[install]
+# Bun-specific configuration
+cache = true
+globalCachePath = "./.bun-cache"
+
+[run]
+# Use bun's shell
+shell = true
+
+[test]
+# Test configuration for future use
+preload = ["./test/setup.ts"]

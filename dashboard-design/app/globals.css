@@ -1,0 +1,471 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import '@neondatabase/auth/ui/tailwind';
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================
+   VETOR CORE - CLEAN SAAS DESIGN SYSTEM
+   Inspired by Apollo.io · Modern · Minimal · Professional
+   ============================================ */
+
+/* Google Fonts - Modern & Clean */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  /* CORE PALETTE - Clean & Subtle */
+  --background: #FFFFFF;
+  --foreground: #0B0F19;
+
+  /* Subtle grays for hierarchy */
+  --muted-50: #F8FAFC;
+  --muted-100: #F1F5F9;
+  --muted-200: #E2E8F0;
+  --muted-300: #CBD5E1;
+  --muted-400: #94A3B8;
+  --muted-500: #64748B;
+
+  /* VETOR BLUE - Used sparingly as accent */
+  --primary: #52A6EC;
+  --primary-50: #EDF5FC;
+  --primary-100: #D4EBF9;
+  --primary-500: #52A6EC;
+  --primary-600: #3D8FE0;
+  --primary-700: #2878D4;
+  --primary-foreground: #FFFFFF;
+
+  /* Surface colors */
+  --card: #FFFFFF;
+  --card-foreground: #0B0F19;
+  --popover: #FFFFFF;
+  --popover-foreground: #0B0F19;
+
+  /* Borders - Very subtle */
+  --border: #E2E8F0;
+  --border-light: #F1F5F9;
+
+  /* Status colors - Muted versions */
+  --success: #22C55E;
+  --success-light: #DCFCE7;
+  --warning: #F97316;
+  --warning-light: #FFEDD5;
+  --error: #EF4444;
+  --error-light: #FEE2E2;
+  --info: #52A6EC;
+  --info-light: #EDF5FC;
+
+  /* Shadows - Soft & Diffused */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.06);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.06), 0 4px 6px -4px rgb(0 0 0 / 0.06);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.06), 0 8px 10px -6px rgb(0 0 0 / 0.06);
+
+  /* Spacing */
+  --radius: 8px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  /* Sidebar */
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #0B0F19;
+  --sidebar-border: #F1F5F9;
+  --sidebar-width: 260px;
+}
+
+.dark {
+  --background: #0B0F19;
+  --foreground: #F8FAFC;
+
+  --muted-50: #1E293B;
+  --muted-100: #334155;
+  --muted-200: #475569;
+  --muted-300: #64748B;
+  --muted-400: #94A3B8;
+  --muted-500: #CBD5E1;
+
+  --primary: #52A6EC;
+  --primary-50: #0C1829;
+  --primary-100: #142238;
+  --primary-500: #52A6EC;
+  --primary-600: #6DB5F0;
+  --primary-700: #88C0F3;
+  --primary-foreground: #FFFFFF;
+
+  --card: #1E293B;
+  --card-foreground: #F8FAFC;
+  --popover: #1E293B;
+  --popover-foreground: #F8FAFC;
+
+  --border: #334155;
+  --border-light: #1E293B;
+
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.4);
+
+  --sidebar: #0F172A;
+  --sidebar-foreground: #F8FAFC;
+  --sidebar-border: #1E293B;
+}
+
+@theme inline {
+  /* Typography - Clean & Modern */
+  --font-sans: 'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Colors */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  /* Primary colors with all shades */
+  --color-primary: var(--primary);
+  --color-primary-50: var(--primary-50);
+  --color-primary-100: var(--primary-100);
+  --color-primary-500: var(--primary-500);
+  --color-primary-600: var(--primary-600);
+  --color-primary-700: var(--primary-700);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-light: var(--primary-100);
+
+  /* Muted colors */
+  --color-muted-50: var(--muted-50);
+  --color-muted-100: var(--muted-100);
+  --color-muted-200: var(--muted-200);
+  --color-muted-300: var(--muted-300);
+  --color-muted-400: var(--muted-400);
+  --color-muted-500: var(--muted-500);
+  --color-muted-600: var(--muted-500);
+
+  /* Borders */
+  --color-border: var(--border);
+  --color-border-light: var(--border-light);
+
+  /* Status colors */
+  --color-success: var(--success);
+  --color-success-light: var(--success-light);
+  --color-warning: var(--warning);
+  --color-warning-light: var(--warning-light);
+  --color-error: var(--error);
+  --color-error-light: var(--error-light);
+  --color-info: var(--info);
+  --color-info-light: var(--info-light);
+
+  /* Radius */
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+
+  /* Sidebar */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Typography Scale - Clean & Readable */
+  h1, .heading-1 {
+    @apply text-3xl font-semibold tracking-tight lg:text-4xl;
+    letter-spacing: -0.02em;
+  }
+
+  h2, .heading-2 {
+    @apply text-2xl font-semibold tracking-tight lg:text-3xl;
+    letter-spacing: -0.01em;
+  }
+
+  h3, .heading-3 {
+    @apply text-xl font-semibold tracking-tight lg:text-2xl;
+  }
+
+  h4, .heading-4 {
+    @apply text-lg font-semibold tracking-tight;
+  }
+
+  h5, .heading-5 {
+    @apply text-base font-semibold tracking-tight;
+  }
+
+  h6, .heading-6 {
+    @apply text-sm font-semibold tracking-tight;
+  }
+
+  /* Links */
+  a {
+    @apply text-primary transition-colors duration-200;
+  }
+
+  a:hover {
+    color: var(--primary-600);
+  }
+
+  /* Focus styles */
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2;
+  }
+}
+
+/* ============================================
+   UTILITY CLASSES - CLEAN SAAS STYLE
+   ============================================ */
+
+@layer utilities {
+  /* Card Styles - Clean & Subtle */
+  .saas-card {
+    @apply bg-card rounded-xl border border-border/50 bg-white/50 backdrop-blur-sm;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
+  }
+
+  .saas-card:hover {
+    box-shadow: var(--shadow-md);
+  }
+
+  /* Button Styles - Modern & Rounded */
+  .saas-btn-primary {
+    @apply bg-primary text-primary-foreground font-medium rounded-lg px-4 py-2.5;
+    @apply transition-all duration-200 ease-out;
+    @apply hover:shadow-md active:scale-[0.98];
+  }
+
+  .saas-btn-primary:hover {
+    background-color: var(--primary-600);
+  }
+
+  .saas-btn-secondary {
+    @apply bg-white text-foreground font-medium rounded-lg px-4 py-2.5;
+    @apply border border-border/50;
+    @apply transition-all duration-200 ease-out;
+    @apply hover:bg-muted-50 hover:border-border;
+    @apply active:scale-[0.98];
+  }
+
+  .saas-btn-ghost {
+    @apply text-foreground font-medium rounded-lg px-4 py-2.5;
+    @apply transition-all duration-200 ease-out;
+    @apply hover:bg-muted-50;
+    @apply active:scale-[0.98];
+  }
+
+  /* Input Styles - Clean & Modern */
+  .saas-input {
+    @apply bg-white border border-border rounded-lg px-3 py-2;
+    @apply text-sm placeholder:text-muted-400;
+    @apply transition-all duration-200;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary;
+  }
+
+  .saas-input:focus {
+    @apply bg-white;
+  }
+
+  /* Badge Styles - Subtle & Professional */
+  .saas-badge-success {
+    @apply inline-flex items-center rounded-full px-2.5 py-1;
+    @apply text-xs font-medium;
+    @apply bg-success-light text-success;
+  }
+
+  .saas-badge-warning {
+    @apply inline-flex items-center rounded-full px-2.5 py-1;
+    @apply text-xs font-medium;
+    @apply bg-warning-light text-warning;
+  }
+
+  .saas-badge-error {
+    @apply inline-flex items-center rounded-full px-2.5 py-1;
+    @apply text-xs font-medium;
+    @apply bg-error-light text-error;
+  }
+
+  .saas-badge-neutral {
+    @apply inline-flex items-center rounded-full px-2.5 py-1;
+    @apply text-xs font-medium;
+    @apply bg-muted-100 text-muted-500;
+  }
+
+  /* Section Styles - Spaced & Clean */
+  .saas-section {
+    @apply space-y-6;
+  }
+
+  .saas-section-header {
+    @apply space-y-1;
+  }
+
+  .saas-section-title {
+    @apply text-xl font-semibold tracking-tight;
+  }
+
+  .saas-section-description {
+    @apply text-sm text-muted-500;
+  }
+
+  /* Divider - Subtle */
+  .saas-divider {
+    @apply border-t border-border/50;
+  }
+
+  /* Avatar - Clean */
+  .saas-avatar {
+    @apply rounded-full border-2 border-white shadow-sm;
+  }
+
+  /* Scrollbar - Minimal */
+  .saas-scrollbar::-webkit-scrollbar {
+    @apply w-1.5;
+  }
+
+  .saas-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .saas-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-muted-300 rounded-full;
+  }
+
+  .saas-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-400;
+  }
+
+  /* Table Styles - Clean */
+  .saas-table-header {
+    @apply text-xs font-semibold text-muted-500 uppercase tracking-wider;
+    @apply border-b border-border/50 pb-3;
+  }
+
+  .saas-table-row {
+    @apply border-b border-border/50 transition-colors;
+    @apply hover:bg-muted-50/50;
+  }
+
+  .saas-table-cell {
+    @apply py-3;
+  }
+
+  /* Status Indicators - Minimal */
+  .saas-status-dot {
+    @apply h-2 w-2 rounded-full;
+  }
+
+  .saas-status-dot-success {
+    @apply bg-success;
+  }
+
+  .saas-status-dot-warning {
+    @apply bg-warning;
+  }
+
+  .saas-status-dot-error {
+    @apply bg-error;
+  }
+
+  /* Text Styles - Clean Hierarchy */
+  .saas-text-muted {
+    @apply text-muted-500;
+  }
+
+  .saas-text-small {
+    @apply text-sm;
+  }
+
+  .saas-text-tiny {
+    @apply text-xs;
+  }
+
+  /* Container - Centered */
+  .saas-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Background Patterns - Subtle */
+  .saas-bg-subtle {
+    @apply bg-gradient-to-br from-muted-50 via-white to-muted-50;
+  }
+
+  .saas-bg-dot {
+    background-image: radial-gradient(circle, var(--muted-300) 1px, transparent 1px);
+    background-size: 24px 24px;
+    @apply opacity-30;
+  }
+}
+
+/* ============================================
+   COMPONENT OVERRIDES
+   ============================================ */
+
+/* Smooth transitions for all interactive elements */
+button, a, input, select, textarea {
+  @apply transition-colors duration-200;
+}
+
+/* Remove default focus outline and add custom ring */
+:focus {
+  @apply outline-none;
+}
+
+/* ============================================
+   DARK MODE OVERRIDES
+   ============================================ */
+
+.dark {
+  .saas-card {
+    @apply bg-card/50 backdrop-blur-sm;
+  }
+
+  .saas-btn-secondary {
+    @apply bg-transparent text-foreground border-border;
+    @apply hover:bg-muted-100 hover:text-foreground;
+  }
+
+  .saas-input {
+    @apply bg-transparent border-border placeholder:text-muted-500;
+    @apply focus:bg-muted-100 focus:ring-primary/20;
+  }
+
+  .saas-table-row {
+    @apply hover:bg-muted-100/20;
+  }
+
+  .saas-bg-subtle {
+    @apply bg-gradient-to-br from-background via-background to-muted-100;
+  }
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+  .saas-card {
+    box-shadow: none !important;
+    border: 1px solid #E2E8F0 !important;
+  }
+}

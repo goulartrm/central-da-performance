@@ -1,0 +1,26 @@
+# Railway Configuration - Frontend (Production)
+
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+# Start command for production
+startCommand = "bun run start"
+# Health check
+healthcheckPath = "/"
+healthcheckTimeout = 300
+# Restart on failure
+restartPolicyType = "ON_FAILURE"
+# Zero-downtime deployments
+numReplicas = 2
+
+[[services.ports]]
+# Railway sets PORT automatically
+port = 3000
+
+[build.env]
+NODE_ENV = "production"
+NEXT_PUBLIC_ENVIRONMENT = "production"
+
+# Production will use production backend URL
+# Set this in Railway dashboard: NEXT_PUBLIC_API_URL=https://api.your-domain.com
