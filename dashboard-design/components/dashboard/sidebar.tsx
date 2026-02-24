@@ -118,29 +118,36 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             const isActive = pathname === item.href;
             const Icon = item.icon;
 
-            return (
-              <Tooltip key={item.href} open={collapsed ? undefined : false}>
-                <TooltipTrigger asChild>
-                  <Link
-                    href={item.href}
-                    className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
-                      isActive
-                        ? "bg-primary text-white shadow-sm"
-                        : "text-muted-600 hover:bg-muted-50 hover:text-foreground"
-                    )}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" strokeWidth={2} />
-                    {!collapsed && <span>{item.label}</span>}
-                  </Link>
-                </TooltipTrigger>
-                {collapsed && (
+            const linkContent = (
+              <Link
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
+                  isActive
+                    ? "bg-primary text-white shadow-sm"
+                    : "text-muted-600 hover:bg-muted-50 hover:text-foreground"
+                )}
+              >
+                <Icon className="h-4 w-4 shrink-0" strokeWidth={2} />
+                {!collapsed && <span>{item.label}</span>}
+              </Link>
+            );
+
+            // Only wrap with Tooltip when collapsed
+            if (collapsed) {
+              return (
+                <Tooltip key={item.href}>
+                  <TooltipTrigger asChild>
+                    {linkContent}
+                  </TooltipTrigger>
                   <TooltipContent side="right" className="bg-white border border-border/50 shadow-md">
                     {item.label}
                   </TooltipContent>
-                )}
-              </Tooltip>
-            );
+                </Tooltip>
+              );
+            }
+
+            return <div key={item.href}>{linkContent}</div>;
           })}
         </nav>
 
@@ -168,21 +175,14 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               </div>
             )}
             {!collapsed && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleLogout}
-                    className="h-8 w-8 text-muted-500 hover:text-foreground hover:bg-muted-100"
-                  >
-                    <LogOut className="h-4 w-4" strokeWidth={2} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent className="bg-white border border-border/50 shadow-md">
-                  Sair
-                </TooltipContent>
-              </Tooltip>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleLogout}
+                className="h-8 w-8 text-muted-500 hover:text-foreground hover:bg-muted-100"
+              >
+                <LogOut className="h-4 w-4" strokeWidth={2} />
+              </Button>
             )}
             {collapsed && (
               <Tooltip>
