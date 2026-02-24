@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "NODE_OPTIONS='--max-old-space-size=4096' bunx next build --webpack",
-    "dev": "bun --turbo run next dev --webpack",
-    "lint": "bunx eslint .",
-    "start": "bunx next start"
+    "build": "NODE_OPTIONS='--max-old-space-size=4096' next build",
+    "dev": "next dev",
+    "lint": "next lint",
+    "start": "next start"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
