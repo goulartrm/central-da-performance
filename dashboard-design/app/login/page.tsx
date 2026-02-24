@@ -1,16 +1,19 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Activity } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  // Redirect to Neon Auth sign-in page
+  // Redirect to Neon Auth sign-in page with callback URL
   useEffect(() => {
-    router.push("/auth/sign-in");
-  }, [router]);
+    const redirectTo = searchParams.get("redirect") || "/";
+    // Neon Auth will handle redirect after sign-in
+    router.push(`/auth/sign-in?redirect=${encodeURIComponent(redirectTo)}`);
+  }, [router, searchParams]);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-muted-50">
