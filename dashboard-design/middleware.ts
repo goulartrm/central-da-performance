@@ -1,10 +1,9 @@
-import { createMiddlewareClient } from '@neondatabase/auth/next';
 import { NextResponse, type NextRequest } from 'next/server';
 
 /**
  * Authentication Middleware
  *
- * Protects routes by checking for valid Neon Auth session.
+ * Protects routes by checking for valid Neon Auth session cookie.
  * Redirects unauthenticated users to the login page.
  *
  * Public routes (no authentication required):
@@ -25,15 +24,15 @@ import { NextResponse, type NextRequest } from 'next/server';
 const publicRoutes = ['/login', '/auth'];
 const protectedRoutes = ['/', '/account', '/configuracoes', '/corretores', '/negocios', '/superadmin'];
 
+// Neon Auth session cookie name
+const SESSION_COOKIE_NAME = 'neon_auth_token';
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Get the auth client to check session
-  const authClient = createMiddlewareClient();
-
-  // Check if user has a valid session
-  const { data: session } = await authClient.getSession();
-  const isAuthenticated = !!session?.user;
+  // Check if user has a valid session by looking for the auth cookie
+  const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME);
+  const isAuthenticated = !!sessionCookie?.value;
 
   // Define route type
   const isPublicRoute = publicRoutes.some(route =>
