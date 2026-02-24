@@ -4,8 +4,8 @@
 builder = "NIXPACKS"
 
 [deploy]
-# Start command for production - use node directly since bun may not be in runtime image
-startCommand = "node node_modules/.bin/next start"
+# Start command for production - use pnpm since it's installed in the image
+startCommand = "pnpm run start"
 # Health check
 healthcheckPath = "/"
 healthcheckTimeout = 300
