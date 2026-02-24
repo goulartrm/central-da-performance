@@ -30,10 +30,23 @@ export default async function authRoutes(fastify: FastifyInstance) {
         })
       }
 
-      if (password.length < 8) {
+      // Enhanced password validation
+      if (password.length < 12) {
         return reply.status(400).send({
           error: 'Bad request',
-          message: 'Password must be at least 8 characters long',
+          message: 'Password must be at least 12 characters long',
+        })
+      }
+
+      // Check for password complexity
+      const hasUpperCase = /[A-Z]/.test(password)
+      const hasLowerCase = /[a-z]/.test(password)
+      const hasNumber = /[0-9]/.test(password)
+
+      if (!hasUpperCase || !hasLowerCase || !hasNumber) {
+        return reply.status(400).send({
+          error: 'Bad request',
+          message: 'Password must contain uppercase, lowercase, and numbers',
         })
       }
 
@@ -188,50 +201,6 @@ export default async function authRoutes(fastify: FastifyInstance) {
     }
   })
 
-  // PUT /api/auth/promote-admin - Promote user to admin (temporary for setup)
-  fastify.put('/promote-admin', async (request, reply) => {
-    try {
-      const { email } = request.body as { email?: string }
-
-      if (!email) {
-        return reply.status(400).send({
-          error: 'Bad request',
-          message: 'Email is required',
-        })
-      }
-
-      const [updatedUser] = await withRetry(() =>
-        db
-          .update(users)
-          .set({ role: 'admin' })
-          .where(eq(users.email, email))
-          .returning()
-      )
-
-      if (!updatedUser) {
-        return reply.status(404).send({
-          error: 'Not found',
-          message: 'User not found',
-        })
-      }
-
-      return reply.send({
-        message: 'User promoted to admin successfully',
-        user: {
-          id: updatedUser.id,
-          email: updatedUser.email,
-          role: updatedUser.role,
-        },
-      })
-    } catch (error) {
-      fastify.log.error(error)
-      return reply.status(500).send({
-        error: 'Internal server error',
-        message: 'Failed to promote user',
-      })
-    }
-  })
-
   // GET /api/auth/me - Get current user (protected route)
   fastify.get('/me', {
     onRequest: [async (request, reply) => {
@@ -308,20 +277,48 @@ export default async function authRoutes(fastify: FastifyInstance) {
         })
       }
 
-      if (password.length < 8) {
+      // Enhanced password validation
+      if (password.length < 12) {
         return reply.status(400).send({
           error: 'Bad request',
-          message: 'Password must be at least 8 characters long',
+          message: 'Password must be at least 12 characters long',
         })
       }
 
-      // Check email domain
-      if (!email.toLowerCase().endsWith('@vetorimobi.com.br')) {
+      // Check for password complexity
+      const hasUpperCase = /[A-Z]/.test(password)
+      const hasLowerCase = /[a-z]/.test(password)
+      const hasNumber = /[0-9]/.test(password)
+
+      if (!hasUpperCase || !hasLowerCase || !hasNumber) {
+        return reply.status(400).send({
+          error: 'Bad request',
+          message: 'Password must contain uppercase, lowercase, and numbers',
+        })
+      }
+
+      // Check email domain with proper validation
+      const normalizedEmail = email.trim().toLowerCase()
+
+      // Check for null bytes and injection attempts
+      if (/\0|\n|\r/.test(normalizedEmail)) {
+        return reply.status(400).send({
+          error: 'Bad request',
+          message: 'Invalid email format',
+        })
+      }
+
+      // Strict email validation - must match exact domain
+      const emailRegex = /^[^\s@]+@vetorimobi\.com\.br$/
+      if (!emailRegex.test(normalizedEmail)) {
         return reply.status(403).send({
           error: 'Forbidden',
           message: 'Only @vetorimobi.com.br email addresses can register as super admin',
         })
       }
+
+      // Use normalized email
+      const email = normalizedEmail
 
       // Check if user already exists
       const [existingUser] = await withRetry(() =>

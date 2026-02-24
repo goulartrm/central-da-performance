@@ -3,6 +3,8 @@ import { db, withRetry } from '../db/index.js'
 import { users, organizations } from '../db/schema.js'
 import { eq, desc, like, or, and, sql, count } from 'drizzle-orm'
 import { randomUUID } from 'crypto'
+import { authMiddleware, type AuthUser } from '../middleware/auth.js'
+import { verifyPassword, hashPassword } from '../services/auth.js'
 
 interface Org {
   id: string
@@ -26,15 +28,59 @@ interface Stats {
   superadmins: number
 }
 
-// Check if email is from vetorimobi.com.br domain
+// CRM Config types with explicit properties (no [key: string]: any)
+interface VetorCrmConfig {
+  vetor_api_key?: string
+  vetor_company_id?: string
+}
+
+interface MadaCrmConfig {
+  mada_supabase_url?: string
+  mada_supabase_key?: string
+}
+
+type CrmConfig = VetorCrmConfig | MadaCrmConfig
+
+// Properly validated email domain check with normalization
 function isVetorimobiEmail(email: string): boolean {
-  return email.toLowerCase().endsWith('@vetorimobi.com.br')
+  if (!email) return false
+  // Trim and normalize
+  const normalized = email.trim().toLowerCase()
+  // Check for null bytes and other injection attempts
+  if (normalized.includes('\0') || normalized.includes('\n') || normalized.includes('\r')) {
+    return false
+  }
+  // Validate with regex and check exact domain match
+  const emailRegex = /^[^\s@]+@vetorimobi\.com\.br$/
+  return emailRegex.test(normalized)
+}
+
+// Helper to verify user is superadmin
+function requireSuperadmin(user: AuthUser): void {
+  if (user.role !== 'superadmin') {
+    throw new Error('Forbidden: Superadmin access required')
+  }
 }
 
 export default async function superadminRoutes(fastify: FastifyInstance) {
+  // ALL superadmin routes require authentication and superadmin role
+
   // GET /api/superadmin/stats - Get overview stats
-  fastify.get('/stats', async (request, reply) => {
+  fastify.get('/stats', {
+    onRequest: [authMiddleware],
+  }, async (request, reply) => {
     try {
+      const user = (request as { user?: AuthUser }).user
+      if (!user) {
+        return reply.status(401).send({
+          error: 'Unauthorized',
+          message: 'Authentication required',
+        })
+      }
+
+      // Verify superadmin role
+      requireSuperadmin(user)
+
       const [orgCount] = await withRetry(() =>
         db.select({ count: count() }).from(organizations)
       )
@@ -53,6 +99,12 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
         superadmins: Number(superadminCount?.count || 0),
       })
     } catch (error) {
+      if (error instanceof Error && error.message === 'Forbidden: Superadmin access required') {
+        return reply.status(403).send({
+          error: 'Forbidden',
+          message: 'Superadmin access required',
+        })
+      }
       fastify.log.error(error)
       return reply.status(500).send({
         error: 'Internal server error',
@@ -62,8 +114,19 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
   })
 
   // GET /api/superadmin/organizations - List all organizations
-  fastify.get('/organizations', async (request, reply) => {
+  fastify.get('/organizations', {
+    onRequest: [authMiddleware],
+  }, async (request, reply) => {
     try {
+      const user = (request as { user?: AuthUser }).user
+      if (!user) {
+        return reply.status(401).send({
+          error: 'Unauthorized',
+          message: 'Authentication required',
+        })
+      }
+      requireSuperadmin(user)
+
       const organizationsList = await withRetry(() =>
         db
           .select({
@@ -80,6 +143,12 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
 
       return reply.send({ organizations: organizationsList })
     } catch (error) {
+      if (error instanceof Error && error.message === 'Forbidden: Superadmin access required') {
+        return reply.status(403).send({
+          error: 'Forbidden',
+          message: 'Superadmin access required',
+        })
+      }
       fastify.log.error(error)
       return reply.status(500).send({
         error: 'Internal server error',
@@ -89,8 +158,19 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
   })
 
   // POST /api/superadmin/organizations - Create new organization
-  fastify.post('/organizations', async (request, reply) => {
+  fastify.post('/organizations', {
+    onRequest: [authMiddleware],
+  }, async (request, reply) => {
     try {
+      const user = (request as { user?: AuthUser }).user
+      if (!user) {
+        return reply.status(401).send({
+          error: 'Unauthorized',
+          message: 'Authentication required',
+        })
+      }
+      requireSuperadmin(user)
+
       const body = request.body as {
         name: string
       }
@@ -116,6 +196,12 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
         organization: newOrg,
       })
     } catch (error) {
+      if (error instanceof Error && error.message === 'Forbidden: Superadmin access required') {
+        return reply.status(403).send({
+          error: 'Forbidden',
+          message: 'Superadmin access required',
+        })
+      }
       fastify.log.error(error)
       return reply.status(500).send({
         error: 'Internal server error',
@@ -125,8 +211,19 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
   })
 
   // PUT /api/superadmin/organizations/:id - Update organization name
-  fastify.put('/organizations/:id', async (request, reply) => {
+  fastify.put('/organizations/:id', {
+    onRequest: [authMiddleware],
+  }, async (request, reply) => {
     try {
+      const user = (request as { user?: AuthUser }).user
+      if (!user) {
+        return reply.status(401).send({
+          error: 'Unauthorized',
+          message: 'Authentication required',
+        })
+      }
+      requireSuperadmin(user)
+
       const { id } = request.params as { id: string }
       const body = request.body as {
         name: string
@@ -162,6 +259,12 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
         organization: updatedOrg,
       })
     } catch (error) {
+      if (error instanceof Error && error.message === 'Forbidden: Superadmin access required') {
+        return reply.status(403).send({
+          error: 'Forbidden',
+          message: 'Superadmin access required',
+        })
+      }
       fastify.log.error(error)
       return reply.status(500).send({
         error: 'Internal server error',
@@ -171,8 +274,19 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
   })
 
   // GET /api/superadmin/organizations/:id - Get organization details
-  fastify.get('/organizations/:id', async (request, reply) => {
+  fastify.get('/organizations/:id', {
+    onRequest: [authMiddleware],
+  }, async (request, reply) => {
     try {
+      const user = (request as { user?: AuthUser }).user
+      if (!user) {
+        return reply.status(401).send({
+          error: 'Unauthorized',
+          message: 'Authentication required',
+        })
+      }
+      requireSuperadmin(user)
+
       const { id } = request.params as { id: string }
 
       const [org] = await withRetry(() =>
@@ -200,18 +314,28 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
           .orderBy(desc(users.created_at))
       )
 
-      // Return organization with CRM config (excluding sensitive data from legacy fields)
-      const { vetor_api_key, mada_supabase_key, ...orgSafe } = org
+      // Return organization WITHOUT sensitive CRM config keys
+      const safeOrg = {
+        id: org.id,
+        name: org.name,
+        company_id: org.company_id,
+        crm_type: org.crm_type,
+        created_at: org.created_at,
+        updated_at: org.updated_at,
+        // Don't expose crm_config with API keys
+      }
 
       return reply.send({
-        organization: {
-          ...orgSafe,
-          company_id: org.company_id || null,
-          crm_config: org.crm_config || null,
-        },
+        organization: safeOrg,
         users: orgUsers,
       })
     } catch (error) {
+      if (error instanceof Error && error.message === 'Forbidden: Superadmin access required') {
+        return reply.status(403).send({
+          error: 'Forbidden',
+          message: 'Superadmin access required',
+        })
+      }
       fastify.log.error(error)
       return reply.status(500).send({
         error: 'Internal server error',
@@ -221,18 +345,23 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
   })
 
   // PUT /api/superadmin/organizations/:id/crm-config - Update organization CRM configuration
-  fastify.put('/organizations/:id/crm-config', async (request, reply) => {
+  fastify.put('/organizations/:id/crm-config', {
+    onRequest: [authMiddleware],
+  }, async (request, reply) => {
     try {
+      const user = (request as { user?: AuthUser }).user
+      if (!user) {
+        return reply.status(401).send({
+          error: 'Unauthorized',
+          message: 'Authentication required',
+        })
+      }
+      requireSuperadmin(user)
+
       const { id } = request.params as { id: string }
       const body = request.body as {
         crm_type: 'vetor' | 'mada' | 'none'
-        crm_config?: {
-          vetor_api_key?: string
-          vetor_company_id?: string
-          mada_supabase_url?: string
-          mada_supabase_key?: string
-          [key: string]: any
-        }
+        crm_config?: CrmConfig
       }
 
       // Validate crm_type
@@ -256,15 +385,16 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
         })
       }
 
-      // Validate CRM config based on crm_type
+      // Validate CRM config based on crm_type with URL validation
       if (body.crm_type === 'vetor' && body.crm_config) {
-        if (!body.crm_config.vetor_api_key) {
+        const vetorConfig = body.crm_config as VetorCrmConfig
+        if (!vetorConfig.vetor_api_key) {
           return reply.status(400).send({
             error: 'Bad request',
             message: 'vetor_api_key is required for Vetor CRM',
           })
         }
-        if (!body.crm_config.vetor_company_id) {
+        if (!vetorConfig.vetor_company_id) {
           return reply.status(400).send({
             error: 'Bad request',
             message: 'vetor_company_id is required for Vetor CRM',
@@ -273,10 +403,34 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
       }
 
       if (body.crm_type === 'mada' && body.crm_config) {
-        if (!body.crm_config.mada_supabase_url || !body.crm_config.mada_supabase_key) {
+        const madaConfig = body.crm_config as MadaCrmConfig
+        if (!madaConfig.mada_supabase_url || !madaConfig.mada_supabase_key) {
           return reply.status(400).send({
             error: 'Bad request',
             message: 'mada_supabase_url and mada_supabase_key are required for Mada CRM',
+          })
+        }
+
+        // Validate Supabase URL to prevent SSRF
+        try {
+          const url = new URL(madaConfig.mada_supabase_url)
+          // Only allow https://*.supabase.co domains
+          if (!url.hostname.endsWith('.supabase.co')) {
+            return reply.status(400).send({
+              error: 'Bad request',
+              message: 'Invalid Supabase URL. Must be a *.supabase.co domain',
+            })
+          }
+          if (url.protocol !== 'https:') {
+            return reply.status(400).send({
+              error: 'Bad request',
+              message: 'Supabase URL must use HTTPS',
+            })
+          }
+        } catch {
+          return reply.status(400).send({
+            error: 'Bad request',
+            message: 'Invalid Supabase URL format',
           })
         }
       }
@@ -288,24 +442,34 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
           .set({
             crm_type: body.crm_type,
             crm_config: body.crm_config || null,
-            company_id: body.crm_config?.vetor_company_id || null,
+            company_id: (body.crm_config as VetorCrmConfig)?.vetor_company_id || null,
             updated_at: new Date(),
           })
           .where(eq(organizations.id, id))
           .returning()
       )
 
-      // Return updated org without sensitive legacy fields
-      const { vetor_api_key, mada_supabase_key, ...orgSafe } = updatedOrg
+      // Return updated org WITHOUT sensitive API keys
+      const safeOrg = {
+        id: updatedOrg.id,
+        name: updatedOrg.name,
+        crm_type: updatedOrg.crm_type,
+        company_id: updatedOrg.company_id,
+        created_at: updatedOrg.created_at,
+        updated_at: updatedOrg.updated_at,
+      }
 
       return reply.send({
         message: 'CRM configuration updated successfully',
-        organization: {
-          ...orgSafe,
-          crm_config: updatedOrg.crm_config || null,
-        },
+        organization: safeOrg,
       })
     } catch (error) {
+      if (error instanceof Error && error.message === 'Forbidden: Superadmin access required') {
+        return reply.status(403).send({
+          error: 'Forbidden',
+          message: 'Superadmin access required',
+        })
+      }
       fastify.log.error(error)
       return reply.status(500).send({
         error: 'Internal server error',
@@ -315,8 +479,19 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
   })
 
   // GET /api/superadmin/users - List all users
-  fastify.get('/users', async (request, reply) => {
+  fastify.get('/users', {
+    onRequest: [authMiddleware],
+  }, async (request, reply) => {
     try {
+      const user = (request as { user?: AuthUser }).user
+      if (!user) {
+        return reply.status(401).send({
+          error: 'Unauthorized',
+          message: 'Authentication required',
+        })
+      }
+      requireSuperadmin(user)
+
       const query = request.query as { role?: string; search?: string }
 
       const conditions = []
@@ -326,7 +501,9 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
       }
 
       if (query.search) {
-        const searchTerm = `%${query.search}%`
+        // Sanitize search term to prevent SQL injection via LIKE
+        const sanitizedSearch = query.search.replace(/[%_\\]/g, '\\$&')
+        const searchTerm = `%${sanitizedSearch}%`
         conditions.push(like(users.email, searchTerm))
       }
 
@@ -348,6 +525,12 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
 
       return reply.send({ users: usersList })
     } catch (error) {
+      if (error instanceof Error && error.message === 'Forbidden: Superadmin access required') {
+        return reply.status(403).send({
+          error: 'Forbidden',
+          message: 'Superadmin access required',
+        })
+      }
       fastify.log.error(error)
       return reply.status(500).send({
         error: 'Internal server error',
@@ -357,8 +540,19 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
   })
 
   // POST /api/superadmin/invite - Invite user (create admin for organization)
-  fastify.post('/invite', async (request, reply) => {
+  fastify.post('/invite', {
+    onRequest: [authMiddleware],
+  }, async (request, reply) => {
     try {
+      const user = (request as { user?: AuthUser }).user
+      if (!user) {
+        return reply.status(401).send({
+          error: 'Unauthorized',
+          message: 'Authentication required',
+        })
+      }
+      requireSuperadmin(user)
+
       const body = request.body as {
         email: string
         password: string
@@ -373,10 +567,24 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
         })
       }
 
-      if (body.password.length < 8) {
+      // Enhanced password validation
+      if (body.password.length < 12) {
         return reply.status(400).send({
           error: 'Bad request',
-          message: 'Password must be at least 8 characters long',
+          message: 'Password must be at least 12 characters long',
+        })
+      }
+
+      // Check for password complexity
+      const hasUpperCase = /[A-Z]/.test(body.password)
+      const hasLowerCase = /[a-z]/.test(body.password)
+      const hasNumber = /[0-9]/.test(body.password)
+      const hasSpecial = /[^A-Za-z0-9]/.test(body.password)
+
+      if (!hasUpperCase || !hasLowerCase || !hasNumber) {
+        return reply.status(400).send({
+          error: 'Bad request',
+          message: 'Password must contain uppercase, lowercase, and numbers',
         })
       }
 
@@ -394,7 +602,7 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
 
       // Check if user already exists
       const [existingUser] = await withRetry(() =>
-        db.select().from(users).where(eq(users.email, body.email)).limit(1)
+        db.select().from(users).where(eq(users.email, body.email.toLowerCase())).limit(1)
       )
 
       if (existingUser) {
@@ -403,6 +611,9 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
           message: 'User with this email already exists',
         })
       }
+
+      // Hash password
+      const passwordHash = await hashPassword(body.password)
 
       // Create user
       const userId = randomUUID()
@@ -413,11 +624,11 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
           .insert(users)
           .values({
             id: userId,
-            email: body.email,
-            password_hash: 'NEON_AUTH_USER', // Will be set by Neon Auth
+            email: body.email.toLowerCase(),
+            password_hash: passwordHash,
             organization_id: body.organization_id,
             role: userRole,
-            auth_provider: 'neon',
+            auth_provider: 'local',
           })
           .returning()
       )
@@ -432,6 +643,12 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
         },
       })
     } catch (error) {
+      if (error instanceof Error && error.message === 'Forbidden: Superadmin access required') {
+        return reply.status(403).send({
+          error: 'Forbidden',
+          message: 'Superadmin access required',
+        })
+      }
       fastify.log.error(error)
       return reply.status(500).send({
         error: 'Internal server error',
@@ -441,8 +658,21 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
   })
 
   // PUT /api/superadmin/promote-superadmin - Promote user to superadmin
-  fastify.put('/promote-superadmin', async (request, reply) => {
+  fastify.put('/promote-superadmin', {
+    onRequest: [authMiddleware],
+  }, async (request, reply) => {
     try {
+      const user = (request as { user?: AuthUser }).user
+      if (!user) {
+        return reply.status(401).send({
+          error: 'Unauthorized',
+          message: 'Authentication required',
+        })
+      }
+
+      // Only existing superadmins can promote others
+      requireSuperadmin(user)
+
       const body = request.body as {
         email: string
       }
@@ -454,8 +684,19 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
         })
       }
 
+      // Normalize email
+      const normalizedEmail = body.email.trim().toLowerCase()
+
+      // Check for null bytes and injection attempts
+      if (/\0|\n|\r/.test(normalizedEmail)) {
+        return reply.status(400).send({
+          error: 'Bad request',
+          message: 'Invalid email format',
+        })
+      }
+
       // Check if email is from vetorimobi.com.br domain
-      if (!isVetorimobiEmail(body.email)) {
+      if (!isVetorimobiEmail(normalizedEmail)) {
         return reply.status(403).send({
           error: 'Forbidden',
           message: 'Only @vetorimobi.com.br email addresses can be promoted to superadmin',
@@ -466,7 +707,7 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
         db
           .update(users)
           .set({ role: 'superadmin' })
-          .where(eq(users.email, body.email))
+          .where(eq(users.email, normalizedEmail))
           .returning()
       )
 
@@ -486,6 +727,12 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
         },
       })
     } catch (error) {
+      if (error instanceof Error && error.message === 'Forbidden: Superadmin access required') {
+        return reply.status(403).send({
+          error: 'Forbidden',
+          message: 'Superadmin access required',
+        })
+      }
       fastify.log.error(error)
       return reply.status(500).send({
         error: 'Internal server error',
@@ -495,8 +742,19 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
   })
 
   // PUT /api/superadmin/users/:id/role - Update user role
-  fastify.put('/users/:id/role', async (request, reply) => {
+  fastify.put('/users/:id/role', {
+    onRequest: [authMiddleware],
+  }, async (request, reply) => {
     try {
+      const user = (request as { user?: AuthUser }).user
+      if (!user) {
+        return reply.status(401).send({
+          error: 'Unauthorized',
+          message: 'Authentication required',
+        })
+      }
+      requireSuperadmin(user)
+
       const { id } = request.params as { id: string }
       const body = request.body as {
         role: string
@@ -507,6 +765,14 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
         return reply.status(400).send({
           error: 'Bad request',
           message: 'Valid role is required (gestor, admin, or superadmin)',
+        })
+      }
+
+      // Prevent self-demotion (superadmin can't remove their own role)
+      if (id === user.id && body.role !== 'superadmin') {
+        return reply.status(403).send({
+          error: 'Forbidden',
+          message: 'You cannot change your own role',
         })
       }
 
@@ -534,6 +800,12 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
         },
       })
     } catch (error) {
+      if (error instanceof Error && error.message === 'Forbidden: Superadmin access required') {
+        return reply.status(403).send({
+          error: 'Forbidden',
+          message: 'Superadmin access required',
+        })
+      }
       fastify.log.error(error)
       return reply.status(500).send({
         error: 'Internal server error',
@@ -543,9 +815,28 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
   })
 
   // DELETE /api/superadmin/users/:id - Delete user
-  fastify.delete('/users/:id', async (request, reply) => {
+  fastify.delete('/users/:id', {
+    onRequest: [authMiddleware],
+  }, async (request, reply) => {
     try {
+      const user = (request as { user?: AuthUser }).user
+      if (!user) {
+        return reply.status(401).send({
+          error: 'Unauthorized',
+          message: 'Authentication required',
+        })
+      }
+      requireSuperadmin(user)
+
       const { id } = request.params as { id: string }
+
+      // Prevent self-deletion
+      if (id === user.id) {
+        return reply.status(403).send({
+          error: 'Forbidden',
+          message: 'You cannot delete your own account',
+        })
+      }
 
       const [deletedUser] = await withRetry(() =>
         db.delete(users).where(eq(users.id, id)).returning()
@@ -562,6 +853,12 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
         message: 'User deleted successfully',
       })
     } catch (error) {
+      if (error instanceof Error && error.message === 'Forbidden: Superadmin access required') {
+        return reply.status(403).send({
+          error: 'Forbidden',
+          message: 'Superadmin access required',
+        })
+      }
       fastify.log.error(error)
       return reply.status(500).send({
         error: 'Internal server error',
@@ -571,9 +868,28 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
   })
 
   // DELETE /api/superadmin/organizations/:id - Delete organization and all its users
-  fastify.delete('/organizations/:id', async (request, reply) => {
+  fastify.delete('/organizations/:id', {
+    onRequest: [authMiddleware],
+  }, async (request, reply) => {
     try {
+      const user = (request as { user?: AuthUser }).user
+      if (!user) {
+        return reply.status(401).send({
+          error: 'Unauthorized',
+          message: 'Authentication required',
+        })
+      }
+      requireSuperadmin(user)
+
       const { id } = request.params as { id: string }
+
+      // Prevent deletion of own organization
+      if (id === user.organization_id) {
+        return reply.status(403).send({
+          error: 'Forbidden',
+          message: 'You cannot delete your own organization',
+        })
+      }
 
       // First delete all users in organization
       await withRetry(() =>
@@ -596,6 +912,12 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
         message: 'Organization deleted successfully',
       })
     } catch (error) {
+      if (error instanceof Error && error.message === 'Forbidden: Superadmin access required') {
+        return reply.status(403).send({
+          error: 'Forbidden',
+          message: 'Superadmin access required',
+        })
+      }
       fastify.log.error(error)
       return reply.status(500).send({
         error: 'Internal server error',
