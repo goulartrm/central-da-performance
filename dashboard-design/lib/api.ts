@@ -6,7 +6,11 @@
  */
 
 // API Configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+// In production, use relative URL since frontend and backend are on same domain
+// In development, use localhost:3001 for the backend
+const API_BASE_URL = process.env.NODE_ENV === 'production'
+  ? ''
+  : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001')
 
 // Types matching the backend responses
 export interface DashboardStats {
