@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
 
 // Neon Auth session types
@@ -46,11 +47,20 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<NeonSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+  const pathname = usePathname();
 
   // Load session on mount
   useEffect(() => {
     loadSession();
   }, []);
+
+  // Redirect authenticated users away from login page
+  useEffect(() => {
+    if (!isLoading && session?.user && pathname === "/login") {
+      router.push("/");
+    }
+  }, [isLoading, session, pathname, router]);
 
   const loadSession = async () => {
     try {
@@ -68,6 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await authClient.signOut();
       setSession(null);
+      router.push("/login");
     } catch (error) {
       console.error("Failed to sign out:", error);
     }

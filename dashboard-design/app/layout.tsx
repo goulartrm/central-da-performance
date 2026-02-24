@@ -6,6 +6,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { authClient } from "@/lib/auth/client";
 import { NeonAuthUIProvider } from "@neondatabase/auth/react";
 import { AuthProvider } from "@/contexts/auth-context";
+import { AuthGuard } from "@/components/auth/auth-guard";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -57,7 +58,9 @@ export default function RootLayout({
           credentials={{ forgotPassword: true }}
         >
           <AuthProvider>
-            {children}
+            <AuthGuard>
+              {children}
+            </AuthGuard>
             <Toaster />
           </AuthProvider>
         </NeonAuthUIProvider>

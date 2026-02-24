@@ -58,7 +58,9 @@
       "Bash(cmd.exe /c \"taskkill /PID 47716 /F\")",
       "Bash(railway link:*)",
       "Bash(railway status:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(cd C:\\\\Users\\\\ricar\\\\OneDrive\\\\Área de Trabalho\\\\central da performance:*)",
+      "Bash(cd C:\\\\Users\\\\ricar\\\\OneDrive\\\\Área de Trabalho\\\\central da performance\\\\dashboard-design:*)"
     ]
   }
 }
