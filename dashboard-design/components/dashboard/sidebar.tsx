@@ -119,7 +119,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             const Icon = item.icon;
 
             return (
-              <Tooltip key={item.href}>
+              <Tooltip key={item.href} open={collapsed ? undefined : false}>
                 <TooltipTrigger asChild>
                   <Link
                     href={item.href}
