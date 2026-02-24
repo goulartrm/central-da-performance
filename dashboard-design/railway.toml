@@ -21,6 +21,7 @@ port = 3000
 [build.env]
 NODE_ENV = "production"
 NEXT_PUBLIC_ENVIRONMENT = "production"
+NODE_VERSION = "20"
 
 # Production will use production backend URL
 # Set this in Railway dashboard: NEXT_PUBLIC_API_URL=https://api.your-domain.com
