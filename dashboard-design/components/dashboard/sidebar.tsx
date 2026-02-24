@@ -62,11 +62,10 @@ const navItems: NavItem[] = [
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logout, isAdmin } = useAuth();
+  const { user, signOut, isAdmin } = useAuth();
 
-  const handleLogout = () => {
-    logout();
-    router.push("/login");
+  const handleLogout = async () => {
+    await signOut();
   };
 
   // Get user initials for avatar
