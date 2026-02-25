@@ -5,59 +5,6 @@ import { eq, and, gte, sql, count, desc } from 'drizzle-orm'
 import { authMiddleware, type AuthUser } from '../middleware/auth.js'
 
 export default async function dashboardRoutes(fastify: FastifyInstance) {
-  // GET /api/dashboard/stats-debug - Debug endpoint to see JWT and query info
-  fastify.get('/stats-debug', {
-    onRequest: [authMiddleware],
-  }, async (request, reply) => {
-    try {
-      const user = (request as { user?: AuthUser }).user
-      if (!user) {
-        return reply.status(401).send({
-          error: 'Unauthorized',
-          message: 'User not authenticated',
-        })
-      }
-
-      // Get all deals to see what's in the database
-      const allDeals = await db
-        .select({
-          id: deals.id,
-          organization_id: deals.organization_id,
-          client_name: deals.client_name,
-          sentiment: deals.sentiment,
-          status: deals.status,
-        })
-        .from(deals)
-        .limit(10)
-
-      // Get unique organization_ids from deals
-      const orgCounts = await db
-        .select({
-          organization_id: deals.organization_id,
-          count: count()
-        })
-        .from(deals)
-        .groupBy(deals.organization_id)
-
-      return reply.send({
-        user: {
-          id: user.id,
-          email: user.email,
-          organization_id: user.organization_id,
-          role: user.role,
-        },
-        dealsByOrganization: orgCounts,
-        sampleDeals: allDeals,
-      })
-    } catch (error) {
-      fastify.log.error(error)
-      return reply.status(500).send({
-        error: 'Internal server error',
-        message: 'Failed to fetch debug info',
-      })
-    }
-  })
-
   // GET /api/dashboard/stats - Get dashboard KPIs
   fastify.get('/stats', {
     onRequest: [authMiddleware],

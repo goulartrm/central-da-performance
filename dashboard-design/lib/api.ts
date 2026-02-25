@@ -253,18 +253,6 @@ class ApiClient {
   }
 
   /**
-   * GET /api/dashboard/stats-debug
-   * Debug endpoint to see JWT and database info
-   */
-  async getDashboardStatsDebug(): Promise<{
-    user: { id: string; email: string; organization_id: string; role: string }
-    dealsByOrganization: Array<{ organization_id: string; count: bigint | number }>
-    sampleDeals: Array<{ id: string; organization_id: string; client_name: string; sentiment: string; status: string }>
-  }> {
-    return this.fetch('/api/dashboard/stats-debug')
-  }
-
-  /**
    * GET /api/deals
    * Fetch deals with optional filtering and pagination
    */
