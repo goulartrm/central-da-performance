@@ -79,22 +79,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const sessionData = result.data || null;
       setSession(sessionData);
 
-      // Exchange Neon Auth session for backend JWT token
-      if (sessionData?.session?.token) {
+      // Get backend JWT using email from Neon Auth session
+      if (sessionData?.user?.email) {
         try {
           const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || '';
-          // Handle relative URLs and ensure protocol for absolute URLs
-          const exchangeUrl = apiBaseUrl.startsWith('http')
-            ? `${apiBaseUrl}/api/auth/exchange-token`
-            : `/api/auth/exchange-token`;
+          const backendUrl = apiBaseUrl.startsWith('http')
+            ? `${apiBaseUrl}/api/auth/get-backend-token`
+            : `/api/auth/get-backend-token`;
 
-          const response = await fetch(exchangeUrl, {
+          const response = await fetch(backendUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ neonToken: sessionData.session.token }),
-            credentials: 'include',
+            body: JSON.stringify({
+              email: sessionData.user.email,
+              name: sessionData.user.name,
+            }),
           });
 
           if (response.ok) {
@@ -107,10 +108,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               }
             }
           } else {
-            console.error('Failed to exchange token:', await response.text());
+            console.error('Failed to get backend token:', await response.text());
           }
         } catch (fetchError) {
-          console.error('Failed to exchange token:', fetchError);
+          console.error('Failed to get backend token:', fetchError);
         }
       }
     } catch (error) {

@@ -264,93 +264,21 @@ export default async function authRoutes(fastify: FastifyInstance) {
     }
   })
 
-  // POST /api/auth/exchange-token - Exchange Neon Auth session for backend JWT
-  // This endpoint accepts a Neon Auth session token and returns a backend JWT
-  fastify.post('/exchange-token', async (request, reply) => {
+  // POST /api/auth/get-backend-token - Get backend JWT using email from Neon Auth
+  // This accepts an email (which the frontend gets from Neon Auth) and returns a backend JWT
+  fastify.post('/get-backend-token', async (request, reply) => {
     try {
-      const body = request.body as { neonToken: string }
-      const { neonToken } = body
+      const body = request.body as { email: string; name?: string }
+      const { email, name } = body
 
-      if (!neonToken) {
+      if (!email) {
         return reply.status(400).send({
           error: 'Bad request',
-          message: 'Neon Auth token is required',
+          message: 'Email is required',
         })
       }
 
-      // Get Neon Auth base URL from environment
-      const neonAuthUrl = process.env.NEON_AUTH_BASE_URL
-      if (!neonAuthUrl) {
-        fastify.log.error('NEON_AUTH_BASE_URL not configured')
-        return reply.status(500).send({
-          error: 'Internal server error',
-          message: 'Authentication service not configured',
-        })
-      }
-
-      // Verify the Neon Auth session by calling the Neon Auth API
-      let neonSession: any
-      try {
-        // Try multiple approaches to verify the session
-        // Approach 1: GET with token as query param
-        let neonResponse = await fetch(`${neonAuthUrl}/getSession?token=${encodeURIComponent(neonToken)}`, {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-          },
-        })
-
-        // Approach 2: GET with Authorization header
-        if (!neonResponse.ok) {
-          neonResponse = await fetch(`${neonAuthUrl}/getSession`, {
-            method: 'GET',
-            headers: {
-              'Accept': 'application/json',
-              'Authorization': `Bearer ${neonToken}`,
-            },
-          })
-        }
-
-        // Approach 3: POST with token in body
-        if (!neonResponse.ok) {
-          neonResponse = await fetch(`${neonAuthUrl}/getSession`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            body: JSON.stringify({ token: neonToken }),
-          })
-        }
-
-        if (!neonResponse.ok) {
-          const errorText = await neonResponse.text().catch(() => 'Unknown error')
-          fastify.log.error(`Neon Auth verification failed: ${neonResponse.status} - ${errorText}`)
-          return reply.status(401).send({
-            error: 'Unauthorized',
-            message: 'Invalid Neon Auth session',
-          })
-        }
-
-        neonSession = await neonResponse.json()
-      } catch (fetchError) {
-        fastify.log.error(fetchError)
-        return reply.status(500).send({
-          error: 'Internal server error',
-          message: 'Failed to verify session with Neon Auth',
-        })
-      }
-
-      // Extract user info from Neon Auth response
-      const neonUser = neonSession?.user
-      if (!neonUser || !neonUser.email) {
-        return reply.status(401).send({
-          error: 'Unauthorized',
-          message: 'Invalid user data from Neon Auth',
-        })
-      }
-
-      const userEmail = neonUser.email.toLowerCase().trim()
+      const userEmail = email.toLowerCase().trim()
 
       // Check if user exists in our database
       const [existingUser] = await withRetry(() =>
