@@ -264,6 +264,182 @@ export default async function authRoutes(fastify: FastifyInstance) {
     }
   })
 
+  // POST /api/auth/exchange-token - Exchange Neon Auth session for backend JWT
+  // This endpoint accepts a Neon Auth session token and returns a backend JWT
+  fastify.post('/exchange-token', async (request, reply) => {
+    try {
+      const body = request.body as { neonToken: string }
+      const { neonToken } = body
+
+      if (!neonToken) {
+        return reply.status(400).send({
+          error: 'Bad request',
+          message: 'Neon Auth token is required',
+        })
+      }
+
+      // Get Neon Auth base URL from environment
+      const neonAuthUrl = process.env.NEON_AUTH_BASE_URL
+      if (!neonAuthUrl) {
+        fastify.log.error('NEON_AUTH_BASE_URL not configured')
+        return reply.status(500).send({
+          error: 'Internal server error',
+          message: 'Authentication service not configured',
+        })
+      }
+
+      // Verify the Neon Auth session by calling the Neon Auth API
+      let neonSession: any
+      try {
+        // Try multiple approaches to verify the session
+        // Approach 1: GET with token as query param
+        let neonResponse = await fetch(`${neonAuthUrl}/getSession?token=${encodeURIComponent(neonToken)}`, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+          },
+        })
+
+        // Approach 2: GET with Authorization header
+        if (!neonResponse.ok) {
+          neonResponse = await fetch(`${neonAuthUrl}/getSession`, {
+            method: 'GET',
+            headers: {
+              'Accept': 'application/json',
+              'Authorization': `Bearer ${neonToken}`,
+            },
+          })
+        }
+
+        // Approach 3: POST with token in body
+        if (!neonResponse.ok) {
+          neonResponse = await fetch(`${neonAuthUrl}/getSession`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: JSON.stringify({ token: neonToken }),
+          })
+        }
+
+        if (!neonResponse.ok) {
+          const errorText = await neonResponse.text().catch(() => 'Unknown error')
+          fastify.log.error(`Neon Auth verification failed: ${neonResponse.status} - ${errorText}`)
+          return reply.status(401).send({
+            error: 'Unauthorized',
+            message: 'Invalid Neon Auth session',
+          })
+        }
+
+        neonSession = await neonResponse.json()
+      } catch (fetchError) {
+        fastify.log.error(fetchError)
+        return reply.status(500).send({
+          error: 'Internal server error',
+          message: 'Failed to verify session with Neon Auth',
+        })
+      }
+
+      // Extract user info from Neon Auth response
+      const neonUser = neonSession?.user
+      if (!neonUser || !neonUser.email) {
+        return reply.status(401).send({
+          error: 'Unauthorized',
+          message: 'Invalid user data from Neon Auth',
+        })
+      }
+
+      const userEmail = neonUser.email.toLowerCase().trim()
+
+      // Check if user exists in our database
+      const [existingUser] = await withRetry(() =>
+        db
+          .select()
+          .from(users)
+          .where(eq(users.email, userEmail))
+          .limit(1)
+      )
+
+      let userId: string
+      let userRole: string
+      let organizationId: string
+
+      if (existingUser) {
+        // User exists, use their data
+        userId = existingUser.id
+        userRole = existingUser.role
+        organizationId = existingUser.organization_id
+
+        // Update auth_provider if not set
+        if (existingUser.auth_provider !== 'neon') {
+          await withRetry(() =>
+            db
+              .update(users)
+              .set({ auth_provider: 'neon' })
+              .where(eq(users.id, userId))
+          )
+        }
+      } else {
+        // User doesn't exist, create them
+        // Create a default organization for the user
+        const [newOrg] = await withRetry(() =>
+          db
+            .insert(organizations)
+            .values({
+              name: userEmail.split('@')[0] + "'s Organization",
+            })
+            .returning()
+        )
+        organizationId = newOrg.id
+
+        // Determine role based on email domain
+        const isVetorEmail = userEmail.endsWith('@vetorimobi.com.br')
+        userRole = isVetorEmail ? 'admin' : 'gestor'
+
+        // Create the user
+        userId = randomUUID()
+        await withRetry(() =>
+          db
+            .insert(users)
+            .values({
+              id: userId,
+              email: userEmail,
+              organization_id: organizationId,
+              role: userRole,
+              auth_provider: 'neon',
+            })
+        )
+      }
+
+      // Generate backend JWT token
+      const tokenUser: AuthUser = {
+        id: userId,
+        email: userEmail,
+        organization_id: organizationId,
+        role: userRole,
+      }
+
+      const token = await generateToken(fastify, tokenUser)
+
+      return reply.send({
+        token,
+        user: {
+          id: userId,
+          email: userEmail,
+          organization_id: organizationId,
+          role: userRole,
+        },
+      })
+    } catch (error) {
+      fastify.log.error(error)
+      return reply.status(500).send({
+        error: 'Internal server error',
+        message: 'Failed to exchange token',
+      })
+    }
+  })
+
   // POST /api/auth/register-superadmin - Register as superadmin (only @vetorimobi.com.br)
   fastify.post('/register-superadmin', async (request, reply) => {
     try {

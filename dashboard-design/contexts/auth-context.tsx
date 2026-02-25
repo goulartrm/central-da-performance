@@ -79,25 +79,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const sessionData = result.data || null;
       setSession(sessionData);
 
-      // Extract JWT token from the auth endpoint for backend API calls
-      // The JWT is returned in the 'set-auth-jwt' response header
-      try {
-        const response = await fetch('/api/auth/get-session', {
-          credentials: 'include',
-        });
-        if (response.ok) {
-          const jwtToken = response.headers.get('set-auth-jwt');
-          if (jwtToken) {
-            api.setToken(jwtToken);
-          } else if (sessionData?.session?.token) {
-            // Fallback to session token
-            api.setToken(sessionData.session.token);
+      // Exchange Neon Auth session for backend JWT token
+      if (sessionData?.session?.token) {
+        try {
+          const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+          // Handle relative URLs and ensure protocol for absolute URLs
+          const exchangeUrl = apiBaseUrl.startsWith('http')
+            ? `${apiBaseUrl}/api/auth/exchange-token`
+            : `/api/auth/exchange-token`;
+
+          const response = await fetch(exchangeUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ neonToken: sessionData.session.token }),
+            credentials: 'include',
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.token) {
+              api.setToken(data.token);
+              // Update the role from the backend response
+              if (data.user?.role) {
+                setUserRole(data.user.role);
+              }
+            }
+          } else {
+            console.error('Failed to exchange token:', await response.text());
           }
-        }
-      } catch (fetchError) {
-        // If we can't get the JWT, try the session token
-        if (sessionData?.session?.token) {
-          api.setToken(sessionData.session.token);
+        } catch (fetchError) {
+          console.error('Failed to exchange token:', fetchError);
         }
       }
     } catch (error) {
@@ -110,6 +123,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const fetchUserRole = async () => {
+    // Role is now set during token exchange, but this can be used as a fallback
+    // Only fetch if we don't have a role yet
+    if (userRole !== "user") return;
+
     try {
       // Use the api client which has the token
       const response = await api.getCurrentUser();
