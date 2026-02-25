@@ -57,6 +57,7 @@ export const deals = pgTable('deals', {
   organization_id: uuid('organization_id')
     .references(() => organizations.id)
     .notNull(),
+  external_id: varchar('external_id', { length: 255 }),
   broker_id: uuid('broker_id').references(() => brokers.id),
   client_name: varchar('client_name', { length: 255 }).notNull(),
   client_phone: varchar('client_phone', { length: 50 }),

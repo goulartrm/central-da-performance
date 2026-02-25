@@ -36,6 +36,7 @@ export interface DashboardStats {
 export interface Deal {
   id: string
   organization_id: string
+  external_id: string | null
   broker_id: string | null
   broker_name: string | null
   client_name: string

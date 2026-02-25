@@ -85,10 +85,13 @@ export default async function syncRoutes(fastify: FastifyInstance) {
           const { VetorImobiAdapter } = await import('../services/vetor-api.js')
 
           // Create adapter with org-specific credentials
+          const companyId = org.crm_config.vetor_company_id || org.company_id || undefined
+          fastify.log.info(`[Sync] Org: ${org.name}, company_id: ${companyId || 'NOT SET'}`)
+
           const vetorAdapter = new VetorImobiAdapter(
             org.crm_config.vetor_api_key,
             undefined, // Use default base URL
-            org.crm_config.vetor_company_id || org.company_id || undefined
+            companyId
           )
 
           // Fetch data from API with company_id filter (filtered at API level)
@@ -97,6 +100,8 @@ export default async function syncRoutes(fastify: FastifyInstance) {
             vetorAdapter.fetchClients(),
             vetorAdapter.fetchDeals(),
           ])
+
+          fastify.log.info(`[Sync] Fetched ${dealsData.length} deals from Vetor API`)
 
           // Sync Users as Brokers (corretores/agents) - already filtered by company_id
           for (const user of users) {
@@ -141,6 +146,9 @@ export default async function syncRoutes(fastify: FastifyInstance) {
           // Create a map of clients by ID for easy lookup
           const clientMap = new Map(clients.map(c => [c.id, c]))
 
+          let dealsCreated = 0
+          let dealsUpdated = 0
+
           // Sync deals for this organization
           for (const vetorDeal of dealsData) {
             try {
@@ -161,19 +169,18 @@ export default async function syncRoutes(fastify: FastifyInstance) {
               const clientEmail = client?.email
               const clientPhone = client?.phone_primary
 
-              // Create activity log from notes
-              let dealId: string | undefined
-
+              // Check for existing deal by external_id (Vetor deal ID)
               const [existingDeal] = await db
                 .select()
                 .from(deals)
                 .where(and(
-                  eq(deals.property_title, vetorDeal.title || ''),
+                  eq(deals.external_id, vetorDeal.id || ''),
                   eq(deals.organization_id, org.id)
                 ))
 
               const dealData = {
                 organization_id: org.id,
+                external_id: vetorDeal.id,
                 broker_id: broker?.id,
                 client_name: clientName,
                 client_email: clientEmail || null,
@@ -186,13 +193,18 @@ export default async function syncRoutes(fastify: FastifyInstance) {
                 updated_at: new Date(),
               }
 
+              let dealId: string
+
               if (existingDeal) {
+                // Update existing deal
                 await db
                   .update(deals)
                   .set(dealData)
                   .where(eq(deals.id, existingDeal.id))
                 dealId = existingDeal.id
+                dealsUpdated++
               } else {
+                // Create new deal
                 const newDealId = crypto.randomUUID()
                 await db
                   .insert(deals)
@@ -202,6 +214,7 @@ export default async function syncRoutes(fastify: FastifyInstance) {
                     created_at: new Date(),
                   })
                 dealId = newDealId
+                dealsCreated++
               }
 
               // Create activity log from notes if present
@@ -219,9 +232,11 @@ export default async function syncRoutes(fastify: FastifyInstance) {
 
               recordsProcessed++
             } catch (e) {
-              // Continue on error
+              fastify.log.error(`[Sync] Error processing deal ${vetorDeal.id}: ${e}`)
             }
           }
+
+          fastify.log.info(`[Sync] Deals created: ${dealsCreated}, updated: ${dealsUpdated}`)
 
           // Update sync log as success
           await db
