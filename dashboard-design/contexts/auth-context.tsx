@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
+import { api } from "@/lib/api";
 
 // Neon Auth session types
 interface NeonSession {
@@ -46,6 +47,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<NeonSession | null>(null);
+  const [userRole, setUserRole] = useState<string>("user");
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
@@ -54,6 +56,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     loadSession();
   }, []);
+
+  // Fetch user role from backend when session changes
+  useEffect(() => {
+    if (session?.user) {
+      fetchUserRole();
+    } else {
+      setUserRole("user");
+    }
+  }, [session]);
 
   // Redirect authenticated users away from login page
   useEffect(() => {
@@ -74,10 +85,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const fetchUserRole = async () => {
+    try {
+      // Use the api client which has the token
+      const response = await api.getCurrentUser();
+      setUserRole(response.user.role);
+    } catch (error) {
+      console.error("Failed to fetch user role:", error);
+      setUserRole("user");
+    }
+  };
+
   const signOut = async () => {
     try {
       await authClient.signOut();
       setSession(null);
+      setUserRole("user");
       router.push("/login");
     } catch (error) {
       console.error("Failed to sign out:", error);
@@ -88,13 +111,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await loadSession();
   };
 
+  // Determine if user is superadmin based on email domain
+  const isVectorEmail = session?.user?.email?.endsWith('@vetorimobi.com.br') || false;
+
   // Convert Neon Auth user to local User type for backward compatibility
   const user: User | null = session?.user
     ? {
         id: session.user.id,
         email: session.user.email,
         name: session.user.name,
-        role: "user", // Default role, will be managed separately
+        role: isVectorEmail ? 'superadmin' : userRole,
         created_at: session.user.createdAt,
       }
     : null;
@@ -103,8 +129,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     session,
     isAuthenticated: !!session?.user,
-    isAdmin: false, // Will be managed via Neon Auth roles
-    isSuperAdmin: false, // Will be managed via Neon Auth roles
+    isAdmin: isVectorEmail || userRole === "admin" || userRole === "superadmin",
+    isSuperAdmin: isVectorEmail || userRole === "superadmin",
     isLoading,
     signOut,
     refreshSession,
