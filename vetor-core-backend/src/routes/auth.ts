@@ -269,7 +269,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
   fastify.post('/get-backend-token', async (request, reply) => {
     try {
       const body = request.body as { email: string; name?: string }
-      const { email, name } = body
+      const { email } = body
 
       if (!email) {
         return reply.status(400).send({
@@ -289,63 +289,19 @@ export default async function authRoutes(fastify: FastifyInstance) {
           .limit(1)
       )
 
-      let userId: string
-      let userRole: string
-      let organizationId: string
-
-      if (existingUser) {
-        // User exists, use their data
-        userId = existingUser.id
-        userRole = existingUser.role
-        organizationId = existingUser.organization_id
-
-        // Update auth_provider if not set
-        if (existingUser.auth_provider !== 'neon') {
-          await withRetry(() =>
-            db
-              .update(users)
-              .set({ auth_provider: 'neon' })
-              .where(eq(users.id, userId))
-          )
-        }
-      } else {
-        // User doesn't exist, create them
-        // Create a default organization for the user
-        const [newOrg] = await withRetry(() =>
-          db
-            .insert(organizations)
-            .values({
-              name: userEmail.split('@')[0] + "'s Organization",
-            })
-            .returning()
-        )
-        organizationId = newOrg.id
-
-        // Determine role based on email domain
-        const isVetorEmail = userEmail.endsWith('@vetorimobi.com.br')
-        userRole = isVetorEmail ? 'admin' : 'gestor'
-
-        // Create the user
-        userId = randomUUID()
-        await withRetry(() =>
-          db
-            .insert(users)
-            .values({
-              id: userId,
-              email: userEmail,
-              organization_id: organizationId,
-              role: userRole,
-              auth_provider: 'neon',
-            })
-        )
+      if (!existingUser) {
+        return reply.status(404).send({
+          error: 'Not found',
+          message: 'User not found. Please contact an administrator to create your account.',
+        })
       }
 
-      // Generate backend JWT token
+      // User exists - generate backend JWT token
       const tokenUser: AuthUser = {
-        id: userId,
-        email: userEmail,
-        organization_id: organizationId,
-        role: userRole,
+        id: existingUser.id,
+        email: existingUser.email,
+        organization_id: existingUser.organization_id,
+        role: existingUser.role,
       }
 
       const token = await generateToken(fastify, tokenUser)
@@ -353,10 +309,69 @@ export default async function authRoutes(fastify: FastifyInstance) {
       return reply.send({
         token,
         user: {
-          id: userId,
-          email: userEmail,
-          organization_id: organizationId,
-          role: userRole,
+          id: existingUser.id,
+          email: existingUser.email,
+          organization_id: existingUser.organization_id,
+          role: existingUser.role,
+        },
+      })
+    } catch (error) {
+      fastify.log.error(error)
+      return reply.status(500).send({
+        error: 'Internal server error',
+        message: 'Failed to get backend token',
+      })
+    }
+  })
+
+  // POST /api/auth/exchange-token - Alias for get-backend-token (backwards compatibility)
+  fastify.post('/exchange-token', async (request, reply) => {
+    try {
+      const body = request.body as { neonToken?: string; email?: string; name?: string }
+      const { email } = body
+
+      if (!email) {
+        return reply.status(400).send({
+          error: 'Bad request',
+          message: 'Email is required',
+        })
+      }
+
+      const userEmail = email.toLowerCase().trim()
+
+      // Check if user exists in our database
+      const [existingUser] = await withRetry(() =>
+        db
+          .select()
+          .from(users)
+          .where(eq(users.email, userEmail))
+          .limit(1)
+      )
+
+      if (!existingUser) {
+        return reply.status(404).send({
+          error: 'Not found',
+          message: 'User not found. Please contact an administrator to create your account.',
+        })
+      }
+
+      // User exists - generate backend JWT token
+      const tokenUser: AuthUser = {
+        id: existingUser.id,
+        email: existingUser.email,
+        organization_id: existingUser.organization_id,
+        role: existingUser.role,
+      }
+
+      const token = await generateToken(fastify, tokenUser)
+
+      return reply.send({
+        token,
+        user: {
+          id: existingUser.id,
+          email: existingUser.email,
+          organization_id: existingUser.organization_id,
+          role: existingUser.role,
         },
       })
     } catch (error) {
