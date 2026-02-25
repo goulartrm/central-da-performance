@@ -76,10 +76,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loadSession = async () => {
     try {
       const result = await authClient.getSession();
-      setSession(result.data || null);
+      const sessionData = result.data || null;
+      setSession(sessionData);
+
+      // Extract JWT token from the auth endpoint for backend API calls
+      // The JWT is returned in the 'set-auth-jwt' response header
+      try {
+        const response = await fetch('/api/auth/get-session', {
+          credentials: 'include',
+        });
+        if (response.ok) {
+          const jwtToken = response.headers.get('set-auth-jwt');
+          if (jwtToken) {
+            api.setToken(jwtToken);
+          } else if (sessionData?.session?.token) {
+            // Fallback to session token
+            api.setToken(sessionData.session.token);
+          }
+        }
+      } catch (fetchError) {
+        // If we can't get the JWT, try the session token
+        if (sessionData?.session?.token) {
+          api.setToken(sessionData.session.token);
+        }
+      }
     } catch (error) {
       console.error("Failed to load session:", error);
       setSession(null);
+      api.clearToken();
     } finally {
       setIsLoading(false);
     }
@@ -101,6 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await authClient.signOut();
       setSession(null);
       setUserRole("user");
+      api.clearToken();
       router.push("/login");
     } catch (error) {
       console.error("Failed to sign out:", error);
