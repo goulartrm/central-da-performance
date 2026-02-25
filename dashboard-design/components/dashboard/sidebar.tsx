@@ -82,7 +82,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   };
 
   return (
-    <TooltipProvider delayDuration={0}>
+    <TooltipProvider delayDuration={700}>
       <aside
         className={cn(
           "fixed left-0 top-0 z-40 flex h-screen flex-col bg-white border-r border-border/50 transition-all duration-300",
