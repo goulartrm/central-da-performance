@@ -264,6 +264,50 @@ export default async function authRoutes(fastify: FastifyInstance) {
     }
   })
 
+  // GET /api/auth/debug-token - Debug endpoint to see JWT contents
+  fastify.get('/debug-token', {
+    onRequest: [async (request, reply) => {
+      const authHeader = request.headers.authorization
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return reply.status(401).send({
+          error: 'Unauthorized',
+          message: 'Missing or invalid authorization header',
+        })
+      }
+      try {
+        const token = authHeader.substring(7)
+        const decoded = await request.server.jwt.verify(token) as AuthUser
+        ;(request as { user?: AuthUser }).user = decoded
+      } catch {
+        return reply.status(401).send({
+          error: 'Unauthorized',
+          message: 'Invalid or expired token',
+        })
+      }
+    }]
+  }, async (request, reply) => {
+    try {
+      const authUser = (request as { user?: AuthUser }).user
+      if (!authUser) {
+        return reply.status(401).send({
+          error: 'Unauthorized',
+          message: 'User not authenticated',
+        })
+      }
+
+      return reply.send({
+        jwt: authUser,
+        isSuperAdmin: authUser.role === 'admin' && authUser.email?.toLowerCase().endsWith('@vetorimobi.com.br'),
+      })
+    } catch (error) {
+      fastify.log.error(error)
+      return reply.status(500).send({
+        error: 'Internal server error',
+        message: 'Failed to debug token',
+      })
+    }
+  })
+
   // POST /api/auth/get-backend-token - Get backend JWT using email from Neon Auth
   // This accepts an email (which the frontend gets from Neon Auth) and returns a backend JWT
   fastify.post('/get-backend-token', async (request, reply) => {
@@ -294,6 +338,17 @@ export default async function authRoutes(fastify: FastifyInstance) {
           error: 'Not found',
           message: 'User not found. Please contact an administrator to create your account.',
         })
+      }
+
+      // If user has @vetorimobi.com.br email and role is not admin, upgrade to admin
+      if (userEmail.endsWith('@vetorimobi.com.br') && existingUser.role !== 'admin') {
+        await withRetry(() =>
+          db
+            .update(users)
+            .set({ role: 'admin' })
+            .where(eq(users.id, existingUser.id))
+        )
+        existingUser.role = 'admin'
       }
 
       // User exists - generate backend JWT token
@@ -353,6 +408,17 @@ export default async function authRoutes(fastify: FastifyInstance) {
           error: 'Not found',
           message: 'User not found. Please contact an administrator to create your account.',
         })
+      }
+
+      // If user has @vetorimobi.com.br email and role is not admin, upgrade to admin
+      if (userEmail.endsWith('@vetorimobi.com.br') && existingUser.role !== 'admin') {
+        await withRetry(() =>
+          db
+            .update(users)
+            .set({ role: 'admin' })
+            .where(eq(users.id, existingUser.id))
+        )
+        existingUser.role = 'admin'
       }
 
       // User exists - generate backend JWT token
