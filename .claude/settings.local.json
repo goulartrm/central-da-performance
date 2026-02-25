@@ -60,7 +60,10 @@
       "Bash(railway status:*)",
       "Bash(git add:*)",
       "Bash(cd C:\\\\Users\\\\ricar\\\\OneDrive\\\\Área de Trabalho\\\\central da performance:*)",
-      "Bash(cd C:\\\\Users\\\\ricar\\\\OneDrive\\\\Área de Trabalho\\\\central da performance\\\\dashboard-design:*)"
+      "Bash(cd C:\\\\Users\\\\ricar\\\\OneDrive\\\\Área de Trabalho\\\\central da performance\\\\dashboard-design:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git reset:*)"
     ]
   }
 }

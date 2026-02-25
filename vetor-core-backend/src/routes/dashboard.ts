@@ -31,7 +31,7 @@ export default async function dashboardRoutes(fastify: FastifyInstance) {
         .limit(10)
 
       // Get unique organization_ids from deals
-      const [orgCounts] = await db
+      const orgCounts = await db
         .select({
           organization_id: deals.organization_id,
           count: count()
