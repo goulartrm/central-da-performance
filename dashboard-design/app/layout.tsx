@@ -2,7 +2,6 @@ import { Toaster } from "@/components/ui/sonner"
 import React from "react"
 import type { Metadata, Viewport } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
-import { Analytics } from "@vercel/analytics/next";
 import { authClient } from "@/lib/auth/client";
 import { NeonAuthUIProvider } from "@neondatabase/auth/react";
 import { AuthProvider } from "@/contexts/auth-context";
@@ -64,7 +63,6 @@ export default function RootLayout({
             <Toaster />
           </AuthProvider>
         </NeonAuthUIProvider>
-        <Analytics />
       </body>
     </html>
   );
