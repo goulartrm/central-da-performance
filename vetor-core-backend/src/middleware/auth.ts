@@ -7,6 +7,11 @@ export interface AuthUser {
   role: string
 }
 
+// Check if user is superadmin (admin role + @vetorimobi.com.br email)
+export function isSuperAdmin(user: AuthUser): boolean {
+  return user.role === 'admin' && user.email?.toLowerCase().endsWith('@vetorimobi.com.br')
+}
+
 export async function authMiddleware(request: FastifyRequest, reply: FastifyReply) {
   try {
     const authHeader = request.headers.authorization

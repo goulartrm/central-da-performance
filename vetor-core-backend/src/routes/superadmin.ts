@@ -3,7 +3,7 @@ import { db, withRetry } from '../db/index.js'
 import { users, organizations } from '../db/schema.js'
 import { eq, desc, like, or, and, sql, count } from 'drizzle-orm'
 import { randomUUID } from 'crypto'
-import { authMiddleware, type AuthUser } from '../middleware/auth.js'
+import { authMiddleware, isSuperAdmin, type AuthUser } from '../middleware/auth.js'
 import { verifyPassword, hashPassword } from '../services/auth.js'
 
 interface Org {
@@ -57,7 +57,7 @@ function isVetorimobiEmail(email: string): boolean {
 
 // Helper to verify user is superadmin
 function requireSuperadmin(user: AuthUser): void {
-  if (user.role !== 'superadmin') {
+  if (!isSuperAdmin(user)) {
     throw new Error('Forbidden: Superadmin access required')
   }
 }
@@ -90,7 +90,12 @@ export default async function superadminRoutes(fastify: FastifyInstance) {
       )
 
       const [superadminCount] = await withRetry(() =>
-        db.select({ count: count() }).from(users).where(eq(users.role, 'superadmin'))
+        db.select({ count: count() }).from(users).where(
+          and(
+            eq(users.role, 'admin'),
+            like(users.email, '%@vetorimobi.com.br')
+          )
+        )
       )
 
       return reply.send({
