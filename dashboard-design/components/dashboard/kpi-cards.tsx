@@ -93,18 +93,22 @@ function KPICard({
 export function KPICards() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
         setIsLoading(true);
-        setError(null);
-        const data = await api.getDashboardStats();
+        const [data, debug] = await Promise.all([
+          api.getDashboardStats(),
+          api.getDashboardStatsDebug().catch(() => null)
+        ]);
+        console.log("Dashboard stats received:", data);
+        console.log("Debug info:", debug);
         setStats(data);
+        setDebugInfo(debug);
       } catch (err) {
         console.error("Failed to fetch dashboard stats:", err);
-        setError("Falha ao carregar estatísticas");
       } finally {
         setIsLoading(false);
       }
@@ -119,31 +123,57 @@ export function KPICards() {
   }, []);
 
   return (
-    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-      <KPICard
-        title="Negócios em Risco"
-        value={stats?.riskDeals?.toString() || "-"}
-        subtitle={stats?.riskDeals === 1 ? "1 negócio com alerta" : `${stats?.riskDeals || 0} negócios com alerta`}
-        variant={stats?.riskDeals && stats.riskDeals > 0 ? "danger" : "success"}
-        icon={<AlertTriangle className="h-5 w-5" strokeWidth={2} />}
-        isLoading={isLoading}
-      />
-      <KPICard
-        title="Conversas Ativas (Mada)"
-        value={stats?.activeConversations?.toString() || "-"}
-        subtitle="Leads interagindo com IA hoje"
-        variant="success"
-        icon={<MessageSquare className="h-5 w-5" strokeWidth={2} />}
-        isLoading={isLoading}
-      />
-      <KPICard
-        title="Tempo Médio de Resposta"
-        value={stats?.avgResponseTime ? `${stats.avgResponseTime}min` : "-"}
-        subtitle="Tempo médio de resposta"
-        variant={stats?.avgResponseTime && stats.avgResponseTime > 15 ? "warning" : "success"}
-        icon={<Clock className="h-5 w-5" strokeWidth={2} />}
-        isLoading={isLoading}
-      />
+    <div className="space-y-4">
+      {/* Debug Info - Remove after fixing */}
+      {debugInfo && (
+        <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-xs space-y-1">
+          <p><strong>Debug Info:</strong></p>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <p className="font-semibold">User:</p>
+              <p>Email: {debugInfo.user?.email}</p>
+              <p>Role: {debugInfo.user?.role}</p>
+              <p>Org ID: {debugInfo.user?.organization_id?.substring(0, 8)}...</p>
+            </div>
+            <div>
+              <p className="font-semibold">Deals in Database:</p>
+              {debugInfo.dealsByOrganization?.map((org: any) => (
+                <p key={org.organization_id}>
+                  Org {org.organization_id.substring(0, 8)}...: {Number(org.count)} deals
+                </p>
+              ))}
+            </div>
+          </div>
+          <p><strong>Current Stats:</strong> {JSON.stringify(stats)}</p>
+        </div>
+      )}
+
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <KPICard
+          title="Negócios em Risco"
+          value={stats?.riskDeals?.toString() || "-"}
+          subtitle={stats?.riskDeals === 1 ? "1 negócio com alerta" : `${stats?.riskDeals || 0} negócios com alerta`}
+          variant={stats?.riskDeals && stats.riskDeals > 0 ? "danger" : "success"}
+          icon={<AlertTriangle className="h-5 w-5" strokeWidth={2} />}
+          isLoading={isLoading}
+        />
+        <KPICard
+          title="Conversas Ativas (Mada)"
+          value={stats?.activeConversations?.toString() || "-"}
+          subtitle="Leads interagindo com IA hoje"
+          variant="success"
+          icon={<MessageSquare className="h-5 w-5" strokeWidth={2} />}
+          isLoading={isLoading}
+        />
+        <KPICard
+          title="Tempo Médio de Resposta"
+          value={stats?.avgResponseTime ? `${stats.avgResponseTime}min` : "-"}
+          subtitle="Tempo médio de resposta"
+          variant={stats?.avgResponseTime && stats.avgResponseTime > 15 ? "warning" : "success"}
+          icon={<Clock className="h-5 w-5" strokeWidth={2} />}
+          isLoading={isLoading}
+        />
+      </div>
     </div>
   );
 }
