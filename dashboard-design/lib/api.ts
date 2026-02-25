@@ -33,6 +33,13 @@ export interface DashboardStats {
   newSummaries: number
 }
 
+export interface DealsStats {
+  total: number
+  ativos: number
+  emVisita: number
+  pipelineValue: number
+}
+
 export interface Deal {
   id: string
   organization_id: string
@@ -251,6 +258,14 @@ class ApiClient {
    */
   async getDashboardStats(): Promise<DashboardStats> {
     return this.fetch<DashboardStats>('/api/dashboard/stats')
+  }
+
+  /**
+   * GET /api/deals/stats
+   * Fetch deals statistics
+   */
+  async getDealsStats(): Promise<DealsStats> {
+    return this.fetch<DealsStats>('/api/deals/stats')
   }
 
   /**

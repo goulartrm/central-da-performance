@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { db, withRetry } from '../db/index.js'
 import { deals, brokers, activityLogs } from '../db/schema.js'
-import { eq, and, like, or, desc, sql, count } from 'drizzle-orm'
+import { eq, and, like, or, desc, sql, count, not } from 'drizzle-orm'
 import type { DealStatus, Sentiment } from '../types/index.js'
 import { authMiddleware, type AuthUser } from '../middleware/auth.js'
 
@@ -111,6 +111,83 @@ export default async function dealsRoutes(fastify: FastifyInstance) {
       return reply.status(500).send({
         error: 'Internal server error',
         message: 'Failed to fetch deals',
+      })
+    }
+  })
+
+  // GET /api/deals/stats - Get deals statistics
+  fastify.get('/stats', {
+    onRequest: [authMiddleware],
+  }, async (request, reply) => {
+    try {
+      const user = (request as { user?: AuthUser }).user
+      if (!user) {
+        return reply.status(401).send({
+          error: 'Unauthorized',
+          message: 'User not authenticated',
+        })
+      }
+
+      const orgCondition = eq(deals.organization_id, user.organization_id)
+
+      // Total count - all deals for the organization
+      const [totalCount] = await withRetry(() =>
+        db
+          .select({ count: count() })
+          .from(deals)
+          .where(orgCondition)
+      )
+      const total = Number(totalCount?.count || 0)
+
+      // Ativos count - all deals except "Lost" status
+      const [ativosCount] = await withRetry(() =>
+        db
+          .select({ count: count() })
+          .from(deals)
+          .where(and(
+            orgCondition,
+            not(eq(deals.status, 'Lost'))
+          ))
+      )
+      const ativos = Number(ativosCount?.count || 0)
+
+      // Em Visita count - deals with "Negotiation" status (visita stages map to Negotiation)
+      const [emVisitaCount] = await withRetry(() =>
+        db
+          .select({ count: count() })
+          .from(deals)
+          .where(and(
+            orgCondition,
+            eq(deals.status, 'Negotiation')
+          ))
+      )
+      const emVisita = Number(emVisitaCount?.count || 0)
+
+      // Pipeline value - sum of potential_value for active deals (not Lost)
+      const [pipelineResult] = await withRetry(() =>
+        db
+          .select({
+            total: sql<number>`COALESCE(SUM(CAST(${deals.potential_value} AS DECIMAL(12,2))), 0)`
+          })
+          .from(deals)
+          .where(and(
+            orgCondition,
+            not(eq(deals.status, 'Lost'))
+          ))
+      )
+      const pipelineValue = Number(pipelineResult?.total || 0)
+
+      return reply.send({
+        total,
+        ativos,
+        emVisita,
+        pipelineValue,
+      })
+    } catch (error) {
+      fastify.log.error(error)
+      return reply.status(500).send({
+        error: 'Internal server error',
+        message: 'Failed to fetch deals statistics',
       })
     }
   })

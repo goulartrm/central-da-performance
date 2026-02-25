@@ -46,6 +46,7 @@ import {
   Loader2,
   AlertCircle,
   RefreshCw,
+  MoreHorizontal,
 } from "lucide-react";
 
 type Status = "lead" | "qualified" | "visit" | "proposal" | "negotiation" | "closed";
@@ -266,177 +267,182 @@ export function DealsTable() {
             <p className="text-xs text-muted-400 mt-1">Tente mudar os filtros ou sincronizar os dados</p>
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent border-b border-border/50">
-                <TableHead className="saas-table-header text-muted-500">
-                  Cliente
-                </TableHead>
-                <TableHead className="saas-table-header text-muted-500">
-                  Imóvel
-                </TableHead>
-                <TableHead className="saas-table-header text-muted-500">
-                  Corretor
-                </TableHead>
-                <TableHead className="saas-table-header text-muted-500">
-                  Resumo IA
-                </TableHead>
-                <TableHead className="saas-table-header text-muted-500">
-                  Status
-                </TableHead>
-                <TableHead className="saas-table-header text-muted-500 text-right">
-                  Ações
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {deals.map((deal) => (
-                <TableRow key={deal.id} className="saas-table-row">
-                  <TableCell className="saas-table-cell">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium text-foreground">
-                        {deal.client_name}
-                      </span>
-                      {deal.client_phone && (
-                        <a
-                          href={`https://wa.me/${deal.client_phone.replace(/\D/g, "")}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-600"
-                        >
-                          <MessageCircle className="h-3 w-3" strokeWidth={2} />
-                          WhatsApp
-                        </a>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="saas-table-cell">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium text-foreground">
-                        {deal.property_title || "Sem imóvel"}
-                      </span>
-                      {deal.property_id && (
-                        <span className="text-xs text-muted-500 font-mono">
-                          {deal.property_id}
-                        </span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="saas-table-cell">
-                    <span className="text-sm text-muted-700">{deal.broker_name || "-"}</span>
-                  </TableCell>
-                  <TableCell className="saas-table-cell">
-                    {deal.smart_summary ? (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <p className="max-w-[200px] cursor-help truncate text-sm text-muted-700 hover:text-foreground">
-                              {deal.smart_summary}
-                            </p>
-                          </TooltipTrigger>
-                          <TooltipContent
-                            side="bottom"
-                            className="bg-white border border-border/50 shadow-md rounded-lg p-3 max-w-[300px]"
-                          >
-                            <p className="text-sm leading-relaxed">{deal.smart_summary}</p>
-                            <Badge
-                              variant="outline"
-                              className={cn(
-                                "mt-2 border rounded-full px-2.5 py-1 text-xs font-medium",
-                                sentimentStyles[deal.sentiment] || sentimentStyles.neutral
-                              )}
-                            >
-                              {sentimentLabels[deal.sentiment] || deal.sentiment}
-                            </Badge>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    ) : (
-                      <span className="text-sm text-muted-400">Sem resumo</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="saas-table-cell">
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "border rounded-full px-2.5 py-1 text-xs font-medium",
-                        statusStyles[deal.status] || statusStyles.New
-                      )}
-                    >
-                      {statusLabels[deal.status] || deal.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="saas-table-cell text-right">
-                    <Dialog open={selectedDeal?.id === deal.id} onOpenChange={handleCloseDialog}>
-                      <DialogTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 px-3 text-sm font-medium text-primary hover:bg-primary-light hover:text-primary"
-                          onClick={() => handleOpenDialog(deal)}
-                        >
-                          <History className="h-4 w-4" strokeWidth={2} />
-                          <span className="hidden sm:inline ml-1">Histórico</span>
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="bg-white border border-border/50 rounded-xl shadow-lg max-w-md">
-                        <DialogHeader>
-                          <DialogTitle className="text-lg font-semibold tracking-tight">
-                            Histórico de Atividades
-                          </DialogTitle>
-                          <DialogDescription className="text-sm text-muted-500">
-                            {selectedDeal?.client_name} · {selectedDeal?.property_title || "Sem imóvel"}
-                          </DialogDescription>
-                        </DialogHeader>
-                        <ScrollArea className="max-h-[400px] pr-4">
-                          {isLoadingDetails ? (
-                            <div className="flex items-center justify-center py-8">
-                              <Loader2 className="h-6 w-6 animate-spin text-muted-500" />
-                            </div>
-                          ) : (
-                            <div className="space-y-3">
-                              {selectedDeal?.activity_logs && selectedDeal.activity_logs.length > 0 ? (
-                                selectedDeal.activity_logs.map((activity) => (
-                                  <div
-                                    key={activity.id}
-                                    className="flex gap-3 rounded-lg border border-border/50 bg-muted-30/50 p-3"
-                                  >
-                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white border border-border/50">
-                                      {activityIcons[activity.type] || <FileText className="h-4 w-4" />}
-                                    </div>
-                                    <div className="flex-1">
-                                      <div className="flex items-center justify-between gap-2">
-                                        <Badge
-                                          variant="outline"
-                                          className="bg-muted-50 text-muted-600 border-border/50 rounded-full px-2.5 py-1 text-xs font-medium"
-                                        >
-                                          {activity.type}
-                                        </Badge>
-                                        <span className="text-xs text-muted-500 font-mono">
-                                          {formatDate(activity.created_at)} · {formatTime(activity.created_at)}
-                                        </span>
-                                      </div>
-                                      <p className="mt-1 text-sm text-muted-700">
-                                        {activity.description}
-                                      </p>
-                                    </div>
-                                  </div>
-                                ))
-                              ) : (
-                                <p className="py-8 text-center text-sm text-muted-500">
-                                  Nenhuma atividade registrada
-                                </p>
-                              )}
-                            </div>
-                          )}
-                        </ScrollArea>
-                      </DialogContent>
-                    </Dialog>
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent border-b border-border/50">
+                  <TableHead className="saas-table-header text-muted-500">
+                    Cliente
+                  </TableHead>
+                  <TableHead className="saas-table-header text-muted-500">
+                    Negócio
+                  </TableHead>
+                  <TableHead className="saas-table-header text-muted-500">
+                    Corretor
+                  </TableHead>
+                  <TableHead className="saas-table-header text-muted-500">
+                    Resumo IA
+                  </TableHead>
+                  <TableHead className="saas-table-header text-muted-500">
+                    Status
+                  </TableHead>
+                  <TableHead className="saas-table-header text-muted-500 text-right w-[60px]">
+                    <MoreHorizontal className="h-4 w-4 ml-auto" />
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {deals.map((deal) => (
+                  <TableRow
+                    key={deal.id}
+                    className="saas-table-row cursor-pointer hover:bg-muted-50/80 transition-colors"
+                    onClick={() => handleOpenDialog(deal)}
+                  >
+                    <TableCell className="saas-table-cell" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-foreground">
+                          {deal.client_name}
+                        </span>
+                        {deal.client_phone && (
+                          <a
+                            href={`https://wa.me/${deal.client_phone.replace(/\D/g, "")}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-xs font-medium text-primary hover:text-primary-600"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <MessageCircle className="h-3 w-3" strokeWidth={2} />
+                            WhatsApp
+                          </a>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="saas-table-cell">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-foreground">
+                          {deal.property_title || "Sem negócio"}
+                        </span>
+                        {deal.property_id && (
+                          <span className="text-xs text-muted-500 font-mono">
+                            {deal.property_id}
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="saas-table-cell">
+                      <span className="text-sm text-muted-700">{deal.broker_name || "-"}</span>
+                    </TableCell>
+                    <TableCell className="saas-table-cell">
+                      {deal.smart_summary ? (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <p className="max-w-[200px] cursor-help truncate text-sm text-muted-700 hover:text-foreground">
+                                {deal.smart_summary}
+                              </p>
+                            </TooltipTrigger>
+                            <TooltipContent
+                              side="bottom"
+                              className="bg-white border border-border/50 shadow-md rounded-lg p-3 max-w-[300px]"
+                            >
+                              <p className="text-sm leading-relaxed">{deal.smart_summary}</p>
+                              <Badge
+                                variant="outline"
+                                className={cn(
+                                  "mt-2 border rounded-full px-2.5 py-1 text-xs font-medium",
+                                  sentimentStyles[deal.sentiment] || sentimentStyles.neutral
+                                )}
+                              >
+                                {sentimentLabels[deal.sentiment] || deal.sentiment}
+                              </Badge>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : (
+                        <span className="text-sm text-muted-400">Sem resumo</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="saas-table-cell">
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "border rounded-full px-2.5 py-1 text-xs font-medium",
+                          statusStyles[deal.status] || statusStyles.New
+                        )}
+                      >
+                        {statusLabels[deal.status] || deal.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="saas-table-cell text-right">
+                      <Dialog open={selectedDeal?.id === deal.id} onOpenChange={handleCloseDialog}>
+                        <DialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-primary hover:bg-primary-light hover:text-primary"
+                          >
+                            <History className="h-4 w-4" strokeWidth={2} />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="bg-white border border-border/50 rounded-xl shadow-lg max-w-md">
+                          <DialogHeader>
+                            <DialogTitle className="text-lg font-semibold tracking-tight">
+                              Histórico de Atividades
+                            </DialogTitle>
+                            <DialogDescription className="text-sm text-muted-500">
+                              {selectedDeal?.client_name} · {selectedDeal?.property_title || "Sem negócio"}
+                            </DialogDescription>
+                          </DialogHeader>
+                          <ScrollArea className="max-h-[400px] pr-4">
+                            {isLoadingDetails ? (
+                              <div className="flex items-center justify-center py-8">
+                                <Loader2 className="h-6 w-6 animate-spin text-muted-500" />
+                              </div>
+                            ) : (
+                              <div className="space-y-3">
+                                {selectedDeal?.activity_logs && selectedDeal.activity_logs.length > 0 ? (
+                                  selectedDeal.activity_logs.map((activity) => (
+                                    <div
+                                      key={activity.id}
+                                      className="flex gap-3 rounded-lg border border-border/50 bg-muted-30/50 p-3"
+                                    >
+                                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white border border-border/50">
+                                        {activityIcons[activity.type] || <FileText className="h-4 w-4" />}
+                                      </div>
+                                      <div className="flex-1">
+                                        <div className="flex items-center justify-between gap-2">
+                                          <Badge
+                                            variant="outline"
+                                            className="bg-muted-50 text-muted-600 border-border/50 rounded-full px-2.5 py-1 text-xs font-medium"
+                                          >
+                                            {activity.type}
+                                          </Badge>
+                                          <span className="text-xs text-muted-500 font-mono">
+                                            {formatDate(activity.created_at)} · {formatTime(activity.created_at)}
+                                          </span>
+                                        </div>
+                                        <p className="mt-1 text-sm text-muted-700">
+                                          {activity.description}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <p className="py-8 text-center text-sm text-muted-500">
+                                    Nenhuma atividade registrada
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                          </ScrollArea>
+                        </DialogContent>
+                      </Dialog>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </ScrollArea>
     </div>

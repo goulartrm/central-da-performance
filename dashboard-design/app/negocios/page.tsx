@@ -1,10 +1,40 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { DealsTable } from "@/components/dashboard/deals-table";
-import { FileText, TrendingUp, Users, DollarSign } from "lucide-react";
+import { api, DealsStats } from "@/lib/api";
+import { FileText, TrendingUp, Users, DollarSign, Loader2 } from "lucide-react";
 
 export default function NegociosPage() {
+  const [stats, setStats] = useState<DealsStats | null>(null);
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const data = await api.getDealsStats();
+        setStats(data);
+      } catch (error) {
+        console.error("Failed to fetch deals stats:", error);
+      } finally {
+        setIsLoadingStats(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  const formatPipelineValue = (value: number): string => {
+    if (value >= 1000000) {
+      return `R$ ${(value / 1000000).toFixed(1)}M`;
+    } else if (value >= 1000) {
+      return `R$ ${(value / 1000).toFixed(1)}K`;
+    } else if (value > 0) {
+      return `R$ ${value.toFixed(0)}`;
+    }
+    return "R$ 0";
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-8">
@@ -34,7 +64,11 @@ export default function NegociosPage() {
               </div>
               <div>
                 <p className="text-xs font-medium text-muted-500">Total</p>
-                <p className="text-xl font-semibold text-foreground">127</p>
+                {isLoadingStats ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-400" />
+                ) : (
+                  <p className="text-xl font-semibold text-foreground">{stats?.total ?? 0}</p>
+                )}
               </div>
             </div>
           </div>
@@ -46,7 +80,11 @@ export default function NegociosPage() {
               </div>
               <div>
                 <p className="text-xs font-medium text-muted-500">Ativos</p>
-                <p className="text-xl font-semibold text-success">42</p>
+                {isLoadingStats ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-400" />
+                ) : (
+                  <p className="text-xl font-semibold text-success">{stats?.ativos ?? 0}</p>
+                )}
               </div>
             </div>
           </div>
@@ -58,7 +96,11 @@ export default function NegociosPage() {
               </div>
               <div>
                 <p className="text-xs font-medium text-muted-500">Em Visita</p>
-                <p className="text-xl font-semibold text-warning">18</p>
+                {isLoadingStats ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-400" />
+                ) : (
+                  <p className="text-xl font-semibold text-warning">{stats?.emVisita ?? 0}</p>
+                )}
               </div>
             </div>
           </div>
@@ -70,7 +112,13 @@ export default function NegociosPage() {
               </div>
               <div>
                 <p className="text-xs font-medium text-muted-500">Pipeline</p>
-                <p className="text-xl font-semibold text-primary">R$ 12.4M</p>
+                {isLoadingStats ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-400" />
+                ) : (
+                  <p className="text-xl font-semibold text-primary">
+                    {stats ? formatPipelineValue(stats.pipelineValue) : "R$ 0"}
+                  </p>
+                )}
               </div>
             </div>
           </div>
