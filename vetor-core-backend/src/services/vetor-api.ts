@@ -99,7 +99,12 @@ export class VetorImobiAdapter implements CrmAdapter {
     const queryString = params.toString()
     const endpoint = `/entities/Deal${queryString ? `?${queryString}` : ''}`
 
-    return this.request<VetorDeal>(endpoint)
+    console.log(`[Vetor API] Fetching deals: ${this.baseURL}${endpoint}`)
+
+    const result = await this.request<VetorDeal>(endpoint)
+    console.log(`[Vetor API] Fetched ${result.length} deals`)
+
+    return result
   }
 
   /**
