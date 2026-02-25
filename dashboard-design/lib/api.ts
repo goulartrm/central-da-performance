@@ -176,6 +176,10 @@ class ApiClient {
    */
   setToken(token: string): void {
     this.token = token
+    // Persist to localStorage for page reloads
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('vetor_core_token', token)
+    }
   }
 
   /**
@@ -183,6 +187,10 @@ class ApiClient {
    */
   clearToken(): void {
     this.token = null
+    // Also clear from localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('vetor_core_token')
+    }
   }
 
   /**
