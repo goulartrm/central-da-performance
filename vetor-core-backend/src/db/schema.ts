@@ -43,7 +43,9 @@ export const brokers = pgTable('brokers', {
   organization_id: uuid('organization_id')
     .references(() => organizations.id)
     .notNull(),
-  name: varchar('name', { length: 255 }).notNull(),
+  name: varchar('name', { length: 255 }), // Legacy field - will be phased out
+  first_name: varchar('first_name', { length: 255 }).notNull().default(''),
+  last_name: varchar('last_name', { length: 255 }).notNull().default(''),
   email: varchar('email', { length: 255 }),
   phone: varchar('phone', { length: 50 }),
   crm_external_id: varchar('crm_external_id', { length: 255 }),
@@ -69,6 +71,16 @@ export const deals = pgTable('deals', {
   smart_summary: text('smart_summary'),
   last_activity: timestamp('last_activity'),
   potential_value: decimal('potential_value', { precision: 12, scale: 2 }),
+  // New Vetor fields
+  stage: varchar('stage', { length: 100 }),
+  stage_entered_at: timestamp('stage_entered_at'),
+  potential_commission: decimal('potential_commission', { precision: 12, scale: 2 }),
+  exclusividade: jsonb('exclusividade').$type<{
+    tem: boolean
+    data_inicio?: string
+    data_fim?: string
+  } | null>(),
+  origem: varchar('origem', { length: 100 }),
   created_at: timestamp('created_at').defaultNow().notNull(),
   updated_at: timestamp('updated_at').defaultNow().notNull(),
 })

@@ -24,16 +24,28 @@ export default async function brokersRoutes(fastify: FastifyInstance) {
       }
 
       const body = request.body as {
-        name: string
+        first_name?: string
+        last_name?: string
+        name?: string // Legacy support - will be split
         email?: string
         phone?: string
       }
 
+      // Handle legacy 'name' field by splitting it
+      let firstName = body.first_name?.trim() || ''
+      let lastName = body.last_name?.trim() || ''
+
+      if (body.name && body.name.trim()) {
+        const nameParts = body.name.trim().split(' ')
+        firstName = nameParts[0] || ''
+        lastName = nameParts.slice(1).join(' ') || ''
+      }
+
       // Validate required fields
-      if (!body.name || typeof body.name !== 'string' || body.name.trim() === '') {
+      if (!firstName) {
         return reply.status(400).send({
           error: 'Validation error',
-          message: 'Name is required',
+          message: 'First name is required',
         })
       }
 
@@ -43,7 +55,8 @@ export default async function brokersRoutes(fastify: FastifyInstance) {
           .insert(brokers)
           .values({
             organization_id: user.organization_id,
-            name: body.name.trim(),
+            first_name: firstName,
+            last_name: lastName,
             email: body.email?.trim() || null,
             phone: body.phone?.trim() || null,
             is_active: true,
@@ -51,9 +64,15 @@ export default async function brokersRoutes(fastify: FastifyInstance) {
           .returning()
       )
 
+      // Add computed 'name' field for API response
+      const brokerWithFullName = {
+        ...newBroker,
+        name: `${newBroker.first_name} ${newBroker.last_name}`.trim(),
+      }
+
       return reply.status(201).send({
         message: 'Broker created successfully',
-        broker: newBroker,
+        broker: brokerWithFullName,
       })
     } catch (error) {
       fastify.log.error(error)
@@ -91,7 +110,8 @@ export default async function brokersRoutes(fastify: FastifyInstance) {
         const searchTerm = `%${query.search}%`
         conditions.push(
           or(
-            like(brokers.name, searchTerm),
+            like(brokers.first_name, searchTerm),
+            like(brokers.last_name, searchTerm),
             like(brokers.email, searchTerm),
             like(brokers.phone, searchTerm)
           )!
@@ -107,8 +127,14 @@ export default async function brokersRoutes(fastify: FastifyInstance) {
           .orderBy(desc(brokers.created_at))
       )
 
+      // Add computed 'name' field for each broker
+      const brokersWithFullName = brokersList.map(broker => ({
+        ...broker,
+        name: `${broker.first_name} ${broker.last_name}`.trim(),
+      }))
+
       return reply.send({
-        brokers: brokersList,
+        brokers: brokersWithFullName,
       })
     } catch (error) {
       fastify.log.error(error)
@@ -151,7 +177,13 @@ export default async function brokersRoutes(fastify: FastifyInstance) {
         })
       }
 
-      return reply.send(broker)
+      // Add computed 'name' field for API response
+      const brokerWithFullName = {
+        ...broker,
+        name: `${broker.first_name} ${broker.last_name}`.trim(),
+      }
+
+      return reply.send(brokerWithFullName)
     } catch (error) {
       fastify.log.error(error)
       return reply.status(500).send({
@@ -176,7 +208,9 @@ export default async function brokersRoutes(fastify: FastifyInstance) {
 
       const { id } = request.params as { id: string }
       const body = request.body as Partial<{
-        name: string
+        first_name: string
+        last_name: string
+        name?: string // Legacy support
         email: string
         phone: string
         is_active: boolean
@@ -185,10 +219,18 @@ export default async function brokersRoutes(fastify: FastifyInstance) {
       // Build update object with only provided fields
       const updateData: Record<string, unknown> = {}
 
-      if (body.name !== undefined) updateData.name = body.name
+      if (body.first_name !== undefined) updateData.first_name = body.first_name
+      if (body.last_name !== undefined) updateData.last_name = body.last_name
       if (body.email !== undefined) updateData.email = body.email
       if (body.phone !== undefined) updateData.phone = body.phone
       if (body.is_active !== undefined) updateData.is_active = body.is_active
+
+      // Handle legacy 'name' field
+      if (body.name !== undefined && body.name.trim()) {
+        const nameParts = body.name.trim().split(' ')
+        updateData.first_name = nameParts[0] || ''
+        updateData.last_name = nameParts.slice(1).join(' ') || ''
+      }
 
       // Update broker with retry - must belong to user's organization
       const [updatedBroker] = await withRetry(() =>
@@ -209,9 +251,15 @@ export default async function brokersRoutes(fastify: FastifyInstance) {
         })
       }
 
+      // Add computed 'name' field for API response
+      const brokerWithFullName = {
+        ...updatedBroker,
+        name: `${updatedBroker.first_name} ${updatedBroker.last_name}`.trim(),
+      }
+
       return reply.send({
         message: 'Broker updated successfully',
-        broker: updatedBroker,
+        broker: brokerWithFullName,
       })
     } catch (error) {
       fastify.log.error(error)

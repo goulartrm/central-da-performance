@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm'
 import { createMadaSyncService } from './mada-sync.js'
 import { VetorImobiAdapter } from './vetor-api.js'
 import { db, withRetry } from '../db/index.js'
-import { syncLogs, organizations, brokers, deals } from '../db/schema.js'
+import { syncLogs, organizations, brokers, deals, activityLogs } from '../db/schema.js'
 
 // Parse cron expression to get interval in milliseconds
 function parseCronInterval(cronExpression: string): number {
@@ -96,6 +96,75 @@ export function startMadaSyncJob(cronExpression: string = '*/5 * * * *') {
   return task
 }
 
+// Sync Vetor Notes as activity logs
+async function syncVetorNotes(organizationId: string, apiKey: string, companyId?: string) {
+  try {
+    const adapter = new VetorImobiAdapter(apiKey, undefined, companyId)
+
+    // Fetch notes from Vetor
+    const response = await fetch(`${adapter['baseUrl']}/entities/Note`, {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      console.log('[Vetor Notes Sync] Failed to fetch notes:', response.status)
+      return
+    }
+
+    const notes = await response.json()
+    console.log('[Vetor Notes Sync] Found ' + notes.length + ' notes')
+
+    for (const note of notes) {
+      try {
+        // Skip archived notes
+        if (note.is_archived) continue
+
+        // Find related deal if deal_id exists
+        let dealId = null
+        if (note.deal_id) {
+          const [deal] = await db.select()
+            .from(deals)
+            .where(eq(deals.external_id, note.deal_id))
+
+          dealId = deal?.id || null
+        }
+
+        // Create activity log for the note
+        await db.insert(activityLogs).values({
+          id: crypto.randomUUID(),
+          deal_id: dealId || crypto.randomUUID(), // TODO: handle notes without deals better
+          type: 'note',
+          description: note.content || note.title || '',
+          metadata: {
+            crm_note_id: note.id,
+            title: note.title,
+            note_type: note.note_type,
+            priority: note.priority,
+            agent_email: note.agent_email,
+            assigned_by: note.assigned_by,
+            due_date: note.due_date,
+            is_completed: note.is_completed,
+            visit_form_id: note.visit_form_id,
+            visit_form_status: note.visit_form_status,
+            property_id: note.property_id,
+            client_id: note.client_id,
+          },
+          created_at: new Date(note.created_date || note.updated_date || Date.now()),
+        }).onConflictDoNothing() // Avoid duplicates
+      } catch (error) {
+        console.error('[Vetor Notes Sync] Error syncing note ' + note.id + ':', error)
+      }
+    }
+
+    console.log('[Vetor Notes Sync] Completed')
+  } catch (error) {
+    console.error('[Vetor Notes Sync] Error:', error)
+  }
+}
+
 // Map Vetor stage to status
 function mapVetorStage(stage: string): string {
   if (!stage) return 'New'
@@ -164,7 +233,8 @@ export function startVetorSyncJob(cronExpression: string = '*/30 * * * *') {
               if (existing) {
                 await db.update(brokers)
                   .set({
-                    name: client.full_name || (client.first_name + ' ' + client.last_name).trim(),
+                    first_name: client.first_name || '',
+                    last_name: client.last_name || '',
                     email: client.email,
                     phone: client.phone_primary,
                     is_active: !client.is_archived && client.status !== 'inactive',
@@ -174,7 +244,8 @@ export function startVetorSyncJob(cronExpression: string = '*/30 * * * *') {
                 await db.insert(brokers).values({
                   id: crypto.randomUUID(),
                   organization_id: org.id,
-                  name: client.full_name || (client.first_name + ' ' + client.last_name).trim(),
+                  first_name: client.first_name || '',
+                  last_name: client.last_name || '',
                   email: client.email,
                   phone: client.phone_primary,
                   crm_external_id: client.id,
@@ -204,9 +275,16 @@ export function startVetorSyncJob(cronExpression: string = '*/30 * * * *') {
                 client_name: vetorDeal.title || 'Sem nome',
                 property_title: vetorDeal.title,
                 property_id: vetorDeal.property_ids?.[0],
+                external_id: vetorDeal.id,
                 status: mapVetorStage(vetorDeal.stage),
                 potential_value: vetorDeal.potential_value ? String(vetorDeal.potential_value) : undefined,
                 last_activity: vetorDeal.last_activity_at ? new Date(vetorDeal.last_activity_at) : undefined,
+                // New Vetor fields
+                stage: vetorDeal.stage,
+                stage_entered_at: vetorDeal.stage_entered_at ? new Date(vetorDeal.stage_entered_at) : undefined,
+                potential_commission: vetorDeal.potential_commission || undefined,
+                exclusividade: vetorDeal.exclusividade || undefined,
+                origem: vetorDeal.origem || vetorDeal.source || undefined,
                 updated_at: new Date(),
               }
 
@@ -226,6 +304,9 @@ export function startVetorSyncJob(cronExpression: string = '*/30 * * * *') {
               console.error('[Vetor Sync] Error syncing deal ' + vetorDeal.id + ':', error)
             }
           }
+
+          // Sync Notes from Vetor
+          await syncVetorNotes(org.id, org.crm_config.vetor_api_key, org.crm_config.vetor_company_id || org.company_id || undefined)
 
           // Update sync log
           await db.update(syncLogs)

@@ -78,6 +78,8 @@ export default async function dealsRoutes(fastify: FastifyInstance) {
             id: deals.id,
             organization_id: deals.organization_id,
             broker_id: deals.broker_id,
+            broker_first_name: brokers.first_name,
+            broker_last_name: brokers.last_name,
             broker_name: brokers.name,
             client_name: deals.client_name,
             client_phone: deals.client_phone,
@@ -89,6 +91,12 @@ export default async function dealsRoutes(fastify: FastifyInstance) {
             smart_summary: deals.smart_summary,
             last_activity: deals.last_activity,
             potential_value: deals.potential_value,
+            // New Vetor fields
+            stage: deals.stage,
+            stage_entered_at: deals.stage_entered_at,
+            potential_commission: deals.potential_commission,
+            exclusividade: deals.exclusividade,
+            origem: deals.origem,
             created_at: deals.created_at,
             updated_at: deals.updated_at,
           })
@@ -100,8 +108,16 @@ export default async function dealsRoutes(fastify: FastifyInstance) {
           .offset(offset)
       )
 
+      // Add computed broker_name and format response
+      const formattedDeals = dealsList.map(deal => ({
+        ...deal,
+        broker_name: deal.broker_first_name && deal.broker_last_name
+          ? `${deal.broker_first_name} ${deal.broker_last_name}`.trim()
+          : deal.broker_name || null,
+      }))
+
       return reply.send({
-        deals: dealsList,
+        deals: formattedDeals,
         total,
         page,
         limit,
@@ -213,6 +229,8 @@ export default async function dealsRoutes(fastify: FastifyInstance) {
           id: deals.id,
           organization_id: deals.organization_id,
           broker_id: deals.broker_id,
+          broker_first_name: brokers.first_name,
+          broker_last_name: brokers.last_name,
           broker_name: brokers.name,
           broker_phone: brokers.phone,
           client_name: deals.client_name,
@@ -225,6 +243,12 @@ export default async function dealsRoutes(fastify: FastifyInstance) {
           smart_summary: deals.smart_summary,
           last_activity: deals.last_activity,
           potential_value: deals.potential_value,
+          // New Vetor fields
+          stage: deals.stage,
+          stage_entered_at: deals.stage_entered_at,
+          potential_commission: deals.potential_commission,
+          exclusividade: deals.exclusividade,
+          origem: deals.origem,
           created_at: deals.created_at,
           updated_at: deals.updated_at,
         })
@@ -249,10 +273,16 @@ export default async function dealsRoutes(fastify: FastifyInstance) {
         .where(eq(activityLogs.deal_id, id))
         .orderBy(desc(activityLogs.created_at))
 
-      return reply.send({
+      // Add computed broker_name
+      const dealWithBrokerName = {
         ...deal,
+        broker_name: deal.broker_first_name && deal.broker_last_name
+          ? `${deal.broker_first_name} ${deal.broker_last_name}`.trim()
+          : deal.broker_name || null,
         activity_logs: activity,
-      })
+      }
+
+      return reply.send(dealWithBrokerName)
     } catch (error) {
       fastify.log.error(error)
       return reply.status(500).send({

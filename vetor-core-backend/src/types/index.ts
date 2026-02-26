@@ -69,7 +69,9 @@ export interface User {
 export interface Broker {
   id: string
   organization_id: string
-  name: string
+  name: string | null // Legacy field - will be phased out
+  first_name: string
+  last_name: string
   email: string | null
   phone: string | null
   crm_external_id: string | null
@@ -92,6 +94,16 @@ export interface Deal {
   smart_summary: string | null
   last_activity: Date | null
   potential_value: number | null
+  // New Vetor fields
+  stage?: string | null
+  stage_entered_at?: Date | null
+  potential_commission?: number | null
+  exclusividade?: {
+    tem: boolean
+    data_inicio?: string
+    data_fim?: string
+  } | null
+  origem?: string | null
   created_at: Date
   updated_at: Date
 }
@@ -136,10 +148,43 @@ export interface VetorDeal {
   agent_email: string
   pipeline_type: string
   stage: string
+  stage_entered_at?: string
   potential_value: number
+  potential_commission?: number
   client_id: string
   company_id?: string
+  exclusividade?: {
+    tem: boolean
+    data_inicio?: string
+    data_fim?: string
+  }
+  origem?: string
+  source?: string
+  last_activity_at?: string
   created_at: string
+}
+
+export interface VetorNote {
+  id: string
+  company_id: string
+  title: string
+  content: string
+  note_type: 'geral' | 'reuniao' | 'ligacao' | 'visita' | 'negociacao' | 'follow_up'
+  priority: 'baixa' | 'media' | 'alta' | 'urgente'
+  property_id?: string
+  client_id?: string
+  deal_id?: string
+  agent_email: string
+  assigned_by?: string
+  due_date?: string
+  is_completed: boolean
+  visit_form_id?: string
+  visit_form_status?: 'pending' | 'draft' | 'signed' | 'sent'
+  is_archived: boolean
+  archived_at?: string
+  archived_by?: string
+  created_date?: string
+  updated_date?: string
 }
 
 export interface VetorProperty {
