@@ -63,7 +63,8 @@
       "Bash(cd C:\\\\Users\\\\ricar\\\\OneDrive\\\\Área de Trabalho\\\\central da performance\\\\dashboard-design:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(cmd /c \"mklink /D c:\\\\Users\\\\ricar\\\\dashboard-link \"\"c:\\\\Users\\\\ricar\\\\OneDrive\\\\Área de Trabalho\\\\central da performance\\\\dashboard-design\"\"\")"
     ]
   }
 }

@@ -162,8 +162,8 @@ export interface VetorDeal {
   origem?: string
   source?: string
   last_activity_at?: string
-  created_at: string
-  updated_at: string
+  created_date?: string
+  updated_date?: string
 }
 
 export interface VetorNote {

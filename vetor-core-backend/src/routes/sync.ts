@@ -190,7 +190,7 @@ export default async function syncRoutes(fastify: FastifyInstance) {
                 status: mapVetorStage(vetorDeal.stage),
                 potential_value: vetorDeal.potential_value ? String(vetorDeal.potential_value) : undefined,
                 last_activity: vetorDeal.last_activity_at ? new Date(vetorDeal.last_activity_at) : undefined,
-                updated_at: vetorDeal.updated_at ? new Date(vetorDeal.updated_at) : new Date(),
+                updated_at: vetorDeal.updated_date ? new Date(vetorDeal.updated_date) : new Date(),
               }
 
               let dealId: string
@@ -204,14 +204,14 @@ export default async function syncRoutes(fastify: FastifyInstance) {
                 dealId = existingDeal.id
                 dealsUpdated++
               } else {
-                // Create new deal - use CRM created_at
+                // Create new deal - use CRM created_date
                 const newDealId = crypto.randomUUID()
                 await db
                   .insert(deals)
                   .values({
                     ...dealData,
                     id: newDealId,
-                    created_at: vetorDeal.created_at ? new Date(vetorDeal.created_at) : new Date(),
+                    created_at: vetorDeal.created_date ? new Date(vetorDeal.created_date) : new Date(),
                   })
                 dealId = newDealId
                 dealsCreated++
