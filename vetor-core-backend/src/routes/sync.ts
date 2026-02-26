@@ -191,6 +191,11 @@ export default async function syncRoutes(fastify: FastifyInstance) {
                 potential_value: vetorDeal.potential_value ? String(vetorDeal.potential_value) : undefined,
                 last_activity: vetorDeal.last_activity_at ? new Date(vetorDeal.last_activity_at) : undefined,
                 updated_at: vetorDeal.updated_date ? new Date(vetorDeal.updated_date) : new Date(),
+                stage: vetorDeal.stage,
+                stage_entered_at: vetorDeal.stage_entered_at ? new Date(vetorDeal.stage_entered_at) : undefined,
+                potential_commission: vetorDeal.potential_commission || undefined,
+                exclusividade: vetorDeal.exclusividade || undefined,
+                origem: vetorDeal.origem || vetorDeal.source || undefined,
               }
 
               let dealId: string
