@@ -7,6 +7,7 @@ import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
 import { MobileSidebar } from "./mobile-sidebar";
 import { cn } from "@/lib/utils";
+import { useIsLandscapeMobile } from "@/hooks/use-landscape";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -18,6 +19,7 @@ export function DashboardLayout({
   breadcrumbs,
 }: DashboardLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const isLandscapeMobile = useIsLandscapeMobile();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
@@ -45,8 +47,17 @@ export function DashboardLayout({
           sidebarCollapsed && "md:ml-16"
         )}
       >
-        <Topbar breadcrumbs={breadcrumbs} />
-        <div className="p-4 pt-16 md:p-5 md:pt-6 lg:p-6 lg:pt-6">{children}</div>
+        {/* Hide Topbar in landscape mobile mode */}
+        {!isLandscapeMobile && <Topbar breadcrumbs={breadcrumbs} />}
+        <div
+          className={cn(
+            "p-4 md:p-5 lg:p-6",
+            // Adjust top padding based on landscape mode
+            isLandscapeMobile ? "pt-4" : "pt-16 md:pt-6 lg:pt-6"
+          )}
+        >
+          {children}
+        </div>
       </main>
     </div>
   );

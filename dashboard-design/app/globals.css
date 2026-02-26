@@ -415,6 +415,23 @@
     background-size: 24px 24px;
     @apply opacity-30;
   }
+
+  /* Glassmorphism - Modern & Clean */
+  .glass {
+    @apply bg-white/80 backdrop-blur-md border-b border-border/50;
+  }
+
+  .glass-sidebar {
+    @apply bg-white/95 backdrop-blur-md border-r border-border/50;
+  }
+
+  .dark .glass {
+    @apply bg-background/80 backdrop-blur-md border-b border-border/50;
+  }
+
+  .dark .glass-sidebar {
+    @apply bg-background/95 backdrop-blur-md border-r border-border/50;
+  }
 }
 
 /* ============================================

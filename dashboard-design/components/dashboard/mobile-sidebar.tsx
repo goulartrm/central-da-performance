@@ -12,11 +12,16 @@ import {
   Settings,
   LogOut,
   Menu,
-  X,
+  RefreshCw,
+  Check,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { api } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
+
+type SyncStatus = "synced" | "syncing" | "error";
 
 const navItems = [
   {
@@ -44,11 +49,36 @@ const navItems = [
 export function MobileSidebar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>("synced");
+  const [lastSync, setLastSync] = useState("5 min");
+  const { toast } = useToast();
 
   // Close on route change
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
+
+  const handleSync = async () => {
+    setSyncStatus("syncing");
+    try {
+      const result = await api.triggerSync("all");
+      setSyncStatus("synced");
+      setLastSync("agora");
+      toast({
+        title: "Sincronização concluída!",
+        description: `${result.recordsProcessed} registros processados.`,
+        variant: "default",
+      });
+    } catch (error) {
+      console.error("Sync error:", error);
+      setSyncStatus("error");
+      toast({
+        title: "Erro na sincronização",
+        description: error instanceof Error ? error.message : "Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -100,27 +130,54 @@ export function MobileSidebar() {
           })}
         </nav>
 
-        {/* User Section */}
-        <div className="absolute bottom-0 left-0 right-0 border-t border-border/50 p-3">
+        {/* Sync Section */}
+        <div className="border-t border-border/50 px-3 py-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSync}
+            disabled={syncStatus === "syncing"}
+            className="w-full justify-start gap-2 bg-background/50"
+          >
+            {syncStatus === "syncing" ? (
+              <RefreshCw className="h-4 w-4 animate-spin" />
+            ) : syncStatus === "synced" ? (
+              <Check className="h-4 w-4 text-success" />
+            ) : (
+              <RefreshCw className="h-4 w-4 text-destructive" />
+            )}
+            <div className="flex flex-1 flex-col items-start">
+              <span className="text-sm font-medium">Sync Agora</span>
+              <span className="text-xs text-muted-foreground">
+                {syncStatus === "synced" && `Atualizado há ${lastSync}`}
+                {syncStatus === "syncing" && "Sincronizando..."}
+                {syncStatus === "error" && "Erro na sincronização"}
+              </span>
+            </div>
+          </Button>
+        </div>
+
+        {/* User Section - Fixed layout to prevent overlap */}
+        <div className="border-t border-border/50 p-3">
           <div className="flex items-center gap-3">
-            <Avatar className="h-9 w-9">
+            <Avatar className="h-9 w-9 shrink-0">
               <AvatarImage src="/placeholder-user.jpg" alt="Gestor" />
               <AvatarFallback className="bg-primary/10 text-primary">
                 GS
               </AvatarFallback>
             </Avatar>
-            <div className="flex flex-1 flex-col">
-              <span className="text-sm font-medium text-foreground">
+            <div className="flex min-w-0 flex-1 flex-col">
+              <span className="text-sm font-medium text-foreground truncate">
                 Gestor Silva
               </span>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground truncate">
                 gestor@vetorimobi.com
               </span>
             </div>
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
             >
               <LogOut className="h-4 w-4" />
             </Button>
