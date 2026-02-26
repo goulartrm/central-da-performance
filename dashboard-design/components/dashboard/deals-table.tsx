@@ -62,6 +62,7 @@ import {
   Search,
   DollarSign,
   Clock,
+  X,
 } from "lucide-react";
 
 type Status = "lead" | "qualified" | "visit" | "proposal" | "negotiation" | "closed";
@@ -198,11 +199,13 @@ export function DealsTable() {
         limit,
         ...(statusFilter !== "all" && { status: statusFilter }),
         ...(sentimentFilter !== "all" && { sentiment: sentimentFilter }),
+        ...(dateFromFilter && { date_from: dateFromFilter }),
+        ...(dateToFilter && { date_to: dateToFilter }),
       });
       setDeals(response.deals);
       setTotal(response.total);
 
-      // Store all deals for broker filter and client-side filtering
+      // Store all deals for broker filter
       setAllDeals(response.deals);
     } catch (err) {
       console.error("Failed to fetch deals:", err);
@@ -210,9 +213,9 @@ export function DealsTable() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, statusFilter, sentimentFilter, limit]);
+  }, [page, statusFilter, sentimentFilter, dateFromFilter, dateToFilter, limit]);
 
-  // Client-side filtering for search and broker
+  // Client-side filtering for search and broker (date is now server-side)
   const filteredDeals = deals.filter(deal => {
     // Search filter
     if (searchQuery) {
@@ -225,20 +228,6 @@ export function DealsTable() {
     // Broker filter
     if (brokerFilter !== "all" && deal.broker_name !== brokerFilter) {
       return false;
-    }
-
-    // Date filter
-    if (dateFromFilter && deal.created_at) {
-      const dealDate = new Date(deal.created_at);
-      const fromDate = new Date(dateFromFilter);
-      if (dealDate < fromDate) return false;
-    }
-
-    if (dateToFilter && deal.created_at) {
-      const dealDate = new Date(deal.created_at);
-      const toDate = new Date(dateToFilter);
-      toDate.setHours(23, 59, 59, 999); // End of the day
-      if (dealDate > toDate) return false;
     }
 
     return true;
@@ -436,18 +425,35 @@ export function DealsTable() {
                 ))}
               </SelectContent>
             </Select>
-            <Input
-              type="date"
-              value={dateFromFilter}
-              onChange={(e) => { setDateFromFilter(e.target.value); setPage(1); }}
-              className="w-36 h-9 border border-border/50 bg-white text-sm"
-            />
-            <Input
-              type="date"
-              value={dateToFilter}
-              onChange={(e) => { setDateToFilter(e.target.value); setPage(1); }}
-              className="w-36 h-9 border border-border/50 bg-white text-sm"
-            />
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-muted-500">De:</span>
+              <Input
+                type="date"
+                value={dateFromFilter}
+                onChange={(e) => { setDateFromFilter(e.target.value); setPage(1); }}
+                className="w-32 h-9 border border-border/50 bg-white text-sm"
+              />
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-muted-500">Até:</span>
+              <Input
+                type="date"
+                value={dateToFilter}
+                onChange={(e) => { setDateToFilter(e.target.value); setPage(1); }}
+                className="w-32 h-9 border border-border/50 bg-white text-sm"
+              />
+              {(dateFromFilter || dateToFilter) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-9 w-9 p-0 text-muted-500 hover:text-foreground"
+                  onClick={() => { setDateFromFilter(''); setDateToFilter(''); setPage(1); }}
+                  title="Limpar filtro de data"
+                >
+                  <X className="h-4 w-4" strokeWidth={2} />
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>

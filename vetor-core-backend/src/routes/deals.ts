@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { db, withRetry } from '../db/index.js'
 import { deals, brokers, activityLogs } from '../db/schema.js'
-import { eq, and, like, or, desc, sql, count, not } from 'drizzle-orm'
+import { eq, and, like, or, desc, sql, count, not, gte, lte } from 'drizzle-orm'
 import type { DealStatus, Sentiment } from '../types/index.js'
 import { authMiddleware, type AuthUser } from '../middleware/auth.js'
 
@@ -12,6 +12,8 @@ interface DealsQuery {
   sentiment?: Sentiment
   broker_id?: string
   search?: string
+  date_from?: string
+  date_to?: string
 }
 
 export default async function dealsRoutes(fastify: FastifyInstance) {
@@ -52,13 +54,29 @@ export default async function dealsRoutes(fastify: FastifyInstance) {
 
       if (query.search) {
         const searchTerm = `%${query.search}%`
-        conditions.push(
-          or(
-            like(deals.client_name, searchTerm),
-            like(deals.property_title, searchTerm),
-            like(deals.client_phone, searchTerm)
-          )
+        const searchCondition = or(
+          like(deals.client_name, searchTerm),
+          like(deals.property_title, searchTerm),
+          like(deals.client_phone, searchTerm)
         )
+        if (searchCondition) conditions.push(searchCondition)
+      }
+
+      // Date filtering - filter by created_at date
+      if (query.date_from) {
+        const fromDate = new Date(query.date_from)
+        if (!isNaN(fromDate.getTime())) {
+          conditions.push(gte(deals.created_at, fromDate))
+        }
+      }
+
+      if (query.date_to) {
+        const toDate = new Date(query.date_to)
+        if (!isNaN(toDate.getTime())) {
+          // Set to end of the day
+          toDate.setHours(23, 59, 59, 999)
+          conditions.push(lte(deals.created_at, toDate))
+        }
       }
 
       // Get total count with retry

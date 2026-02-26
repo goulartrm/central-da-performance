@@ -126,6 +126,8 @@ export interface DealsQuery {
   sentiment?: string
   broker_id?: string
   search?: string
+  date_from?: string
+  date_to?: string
 }
 
 export interface BrokersQuery {
@@ -281,6 +283,8 @@ class ApiClient {
     if (query?.sentiment) params.append('sentiment', query.sentiment)
     if (query?.broker_id) params.append('broker_id', query.broker_id)
     if (query?.search) params.append('search', query.search)
+    if (query?.date_from) params.append('date_from', query.date_from)
+    if (query?.date_to) params.append('date_to', query.date_to)
 
     const queryString = params.toString()
     return this.fetch<DealsListResponse>(`/api/deals${queryString ? `?${queryString}` : ''}`)
