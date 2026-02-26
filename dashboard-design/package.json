@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "NODE_OPTIONS='--max-old-space-size=4096' next build",
-    "dev": "next dev",
+    "dev": "TURBOPACK=0 next dev",
     "lint": "next lint",
     "start": "next start"
   },

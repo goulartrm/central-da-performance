@@ -28,25 +28,25 @@ export function DashboardLayout({
       </div>
 
       {/* Desktop Sidebar */}
-      <div className="hidden lg:block">
+      <div className="hidden md:block">
         <Sidebar
           collapsed={sidebarCollapsed}
           onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
         />
       </div>
 
-      {/* Mobile Sidebar */}
+      {/* Mobile Sidebar - hidden on tablet+ */}
       <MobileSidebar />
 
       <main
         className={cn(
           "min-h-screen transition-all duration-300",
-          "lg:ml-64",
-          sidebarCollapsed && "lg:ml-16"
+          "md:ml-64",
+          sidebarCollapsed && "md:ml-16"
         )}
       >
         <Topbar breadcrumbs={breadcrumbs} />
-        <div className="p-4 pt-16 lg:p-6 lg:pt-6">{children}</div>
+        <div className="p-4 pt-16 md:p-5 md:pt-6 lg:p-6 lg:pt-6">{children}</div>
       </main>
     </div>
   );

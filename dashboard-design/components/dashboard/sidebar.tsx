@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -93,19 +94,24 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         <div className="flex h-16 items-center justify-between border-b border-border/50 px-4">
           {!collapsed && (
             <Link href="/" className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                <span className="text-sm font-semibold text-white">V</span>
-              </div>
-              <span className="font-semibold text-sm text-foreground">
-                Vetor Core
-              </span>
+              <Image
+                src="/logo_vetor-removebg-preview.png"
+                alt="Vetor Imobi"
+                width={120}
+                height={40}
+                className="h-8 w-auto"
+              />
             </Link>
           )}
           {collapsed && (
             <Link href="/" className="mx-auto">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                <span className="text-sm font-semibold text-white">V</span>
-              </div>
+              <Image
+                src="/V_de_Vetor-removebg-preview.png"
+                alt="Vetor Imobi"
+                width={32}
+                height={32}
+                className="h-8 w-8"
+              />
             </Link>
           )}
         </div>

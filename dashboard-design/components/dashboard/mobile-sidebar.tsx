@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -55,7 +56,7 @@ export function MobileSidebar() {
         <Button
           variant="ghost"
           size="icon"
-          className="fixed left-4 top-4 z-50 lg:hidden"
+          className="fixed left-4 top-4 z-50 md:hidden"
         >
           <Menu className="h-5 w-5" />
           <span className="sr-only">Abrir menu</span>
@@ -65,12 +66,13 @@ export function MobileSidebar() {
         {/* Logo Section */}
         <div className="flex h-16 items-center justify-between border-b border-border/50 px-4">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <span className="text-sm font-bold text-primary-foreground">
-                V
-              </span>
-            </div>
-            <span className="font-semibold text-foreground">Vetor Imobi</span>
+            <Image
+              src="/logo_vetor-removebg-preview.png"
+              alt="Vetor Imobi"
+              width={120}
+              height={40}
+              className="h-8 w-auto"
+            />
           </Link>
         </div>
 

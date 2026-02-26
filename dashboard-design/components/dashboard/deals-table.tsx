@@ -47,6 +47,10 @@ import {
   AlertCircle,
   RefreshCw,
   MoreHorizontal,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react";
 
 type Status = "lead" | "qualified" | "visit" | "proposal" | "negotiation" | "closed";
@@ -123,6 +127,8 @@ export function DealsTable() {
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const limit = 20;
+  const totalPages = Math.ceil(total / limit);
 
   const fetchDeals = useCallback(async () => {
     try {
@@ -130,7 +136,7 @@ export function DealsTable() {
       setError(null);
       const response = await api.getDeals({
         page,
-        limit: 50,
+        limit,
         ...(statusFilter !== "all" && { status: statusFilter }),
         ...(sentimentFilter !== "all" && { sentiment: sentimentFilter }),
       });
@@ -142,7 +148,7 @@ export function DealsTable() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, statusFilter, sentimentFilter]);
+  }, [page, statusFilter, sentimentFilter, limit]);
 
   useEffect(() => {
     fetchDeals();
@@ -267,8 +273,14 @@ export function DealsTable() {
             <p className="text-xs text-muted-400 mt-1">Tente mudar os filtros ou sincronizar os dados</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
+          <div className="flex flex-col">
+            {/* Table with horizontal scroll */}
+            <div className="relative overflow-x-auto">
+              {/* Mobile scroll hint */}
+              <div className="md:hidden text-xs text-muted-500 text-center py-2 border-b border-border/30">
+                ← Deslize para ver mais →
+              </div>
+              <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-b border-border/50">
                   <TableHead className="saas-table-header text-muted-500">
@@ -442,6 +454,113 @@ export function DealsTable() {
                 ))}
               </TableBody>
             </Table>
+          </div>
+        </div>
+        )}
+
+        {/* Pagination Controls */}
+        {!isLoading && !error && deals.length > 0 && totalPages > 1 && (
+          <div className="border-t border-border/50 bg-muted-30/30 px-4 py-3">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              {/* Page info */}
+              <div className="text-sm text-muted-600">
+                <span className="font-medium text-foreground">
+                  {(page - 1) * limit + 1}
+                </span>
+                {" "}-{" "}
+                <span className="font-medium text-foreground">
+                  {Math.min(page * limit, total)}
+                </span>
+                {" "}de{" "}
+                <span className="font-medium text-foreground">{total}</span>{" "}
+                negócios
+              </div>
+
+              {/* Pagination buttons */}
+              <div className="flex items-center gap-1">
+                {/* First page */}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 border-border/50"
+                  onClick={() => setPage(1)}
+                  disabled={page === 1}
+                >
+                  <ChevronsLeft className="h-4 w-4" />
+                </Button>
+
+                {/* Previous */}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 border-border/50"
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+
+                {/* Page numbers - simplified on mobile */}
+                <div className="hidden md:flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (page <= 3) {
+                      pageNum = i + 1;
+                    } else if (page >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = page - 2 + i;
+                    }
+
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={page === pageNum ? "default" : "outline"}
+                        size="icon"
+                        className={cn(
+                          "h-8 w-8",
+                          page === pageNum
+                            ? "bg-primary text-white"
+                            : "border-border/50"
+                        )}
+                        onClick={() => setPage(pageNum)}
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
+                </div>
+
+                {/* Current page indicator for mobile */}
+                <div className="md:hidden text-sm font-medium text-foreground px-2">
+                  {page} / {totalPages}
+                </div>
+
+                {/* Next */}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 border-border/50"
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+
+                {/* Last page */}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 border-border/50"
+                  onClick={() => setPage(totalPages)}
+                  disabled={page === totalPages}
+                >
+                  <ChevronsRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           </div>
         )}
       </ScrollArea>

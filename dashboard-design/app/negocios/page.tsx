@@ -56,7 +56,7 @@ export default function NegociosPage() {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4">
           <div className="saas-card p-4 rounded-xl border border-border/50 bg-white/50 backdrop-blur-sm">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">

@@ -42,9 +42,9 @@ export function Topbar({ breadcrumbs = [] }: TopbarProps) {
   };
 
   return (
-    <header className="glass sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border/50 px-4 lg:px-6">
+    <header className="glass sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border/50 px-4 md:px-5 lg:px-6">
       {/* Breadcrumbs */}
-      <nav className="ml-12 flex items-center gap-2 text-sm lg:ml-0">
+      <nav className="ml-12 flex items-center gap-2 text-sm truncate md:ml-0 md:flex-nowrap">
         <span className="text-muted-foreground">Home</span>
         {breadcrumbs.map((crumb, index) => (
           <span key={crumb.label} className="flex items-center gap-2">
