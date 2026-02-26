@@ -160,6 +160,32 @@ export class VetorImobiAdapter implements CrmAdapter {
   }
 
   /**
+   * Fetch notes from Vetor Imobi
+   * GET /entities/Note
+   */
+  async fetchNotes(filters?: Record<string, unknown>): Promise<any[]> {
+    const params = new URLSearchParams()
+
+    // Add company_id filter if set
+    if (this.companyId) {
+      params.append('company_id', this.companyId)
+    }
+
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          params.append(key, String(value))
+        }
+      })
+    }
+
+    const queryString = params.toString()
+    const endpoint = `/entities/Note${queryString ? `?${queryString}` : ''}`
+
+    return this.request<any>(endpoint)
+  }
+
+  /**
    * Update a deal in Vetor Imobi
    * PUT /entities/Deal/{entityId}
    */
@@ -187,16 +213,18 @@ export class VetorImobiAdapter implements CrmAdapter {
     clients: VetorClient[]
     deals: VetorDeal[]
     properties: VetorProperty[]
+    users: any[]
   }> {
     const since = new Date(Date.now() - minutes * 60 * 1000).toISOString()
 
-    const [clients, deals, properties] = await Promise.all([
+    const [clients, deals, properties, users] = await Promise.all([
       this.fetchClients({ updated_at: `gte.${since}` }),
       this.fetchDeals({ updated_at: `gte.${since}` }),
       this.fetchProperties({ updated_at: `gte.${since}` }),
+      this.fetchUsers({ updated_at: `gte.${since}` }),
     ])
 
-    return { clients, deals, properties }
+    return { clients, deals, properties, users }
   }
 
   /**
@@ -208,15 +236,17 @@ export class VetorImobiAdapter implements CrmAdapter {
     clients: VetorClient[]
     deals: VetorDeal[]
     properties: VetorProperty[]
+    notes: any[]
   }> {
-    const [users, clients, deals, properties] = await Promise.all([
+    const [users, clients, deals, properties, notes] = await Promise.all([
       this.request<any>('/entities/User'),
       this.request<VetorClient>('/entities/Client'),
       this.request<VetorDeal>('/entities/Deal'),
       this.request<VetorProperty>('/entities/Property'),
+      this.request<any>('/entities/Note'),
     ])
 
-    return { users, clients, deals, properties }
+    return { users, clients, deals, properties, notes }
   }
 
   /**

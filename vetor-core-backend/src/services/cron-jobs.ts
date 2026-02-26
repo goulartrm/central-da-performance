@@ -101,20 +101,8 @@ async function syncVetorNotes(organizationId: string, apiKey: string, companyId?
   try {
     const adapter = new VetorImobiAdapter(apiKey, undefined, companyId)
 
-    // Fetch notes from Vetor
-    const response = await fetch(`${adapter['baseUrl']}/entities/Note`, {
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-    })
-
-    if (!response.ok) {
-      console.log('[Vetor Notes Sync] Failed to fetch notes:', response.status)
-      return
-    }
-
-    const notes = await response.json()
+    // Fetch notes from Vetor using the adapter's fetchNotes method
+    const notes = await adapter.fetchNotes()
     console.log('[Vetor Notes Sync] Found ' + notes.length + ' notes')
 
     for (const note of notes) {
@@ -220,41 +208,44 @@ export function startVetorSyncJob(cronExpression: string = '*/30 * * * *') {
           )
 
           // Fetch recent data
-          const { clients, deals: vetorDeals, properties } = await vetorAdapter.fetchRecentlyModified(30)
-          console.log('[Vetor Sync] Org ' + org.id + ': Found ' + clients.length + ' clients, ' + vetorDeals.length + ' deals, ' + properties.length + ' properties')
+          const { users, clients, deals: vetorDeals, properties } = await vetorAdapter.fetchRecentlyModified(30)
+          console.log('[Vetor Sync] Org ' + org.id + ': Found ' + users.length + ' users, ' + clients.length + ' clients, ' + vetorDeals.length + ' deals, ' + properties.length + ' properties')
 
-          // Sync clients as brokers
-          for (const client of clients) {
+          // Sync users as brokers (Users = corretores/agentes, NOT clients)
+          for (const user of users) {
             try {
               const [existing] = await db.select()
                 .from(brokers)
-                .where(eq(brokers.crm_external_id, client.id || ''))
+                .where(eq(brokers.crm_external_id, user.id || ''))
+
+              const brokerData = {
+                first_name: user.first_name || '',
+                last_name: user.last_name || '',
+                email: user.email,
+                phone: user.phone,
+                is_active: !user.disabled && user.status === 'active',
+              }
+
+              // Log first user for debug
+              if (processed === 0) {
+                console.log('[Vetor Sync] Sample user data:', JSON.stringify({ id: user.id, ...brokerData }))
+              }
 
               if (existing) {
                 await db.update(brokers)
-                  .set({
-                    first_name: client.first_name || '',
-                    last_name: client.last_name || '',
-                    email: client.email,
-                    phone: client.phone_primary,
-                    is_active: !client.is_archived && client.status !== 'inactive',
-                  })
+                  .set(brokerData)
                   .where(eq(brokers.id, existing.id))
               } else {
                 await db.insert(brokers).values({
                   id: crypto.randomUUID(),
                   organization_id: org.id,
-                  first_name: client.first_name || '',
-                  last_name: client.last_name || '',
-                  email: client.email,
-                  phone: client.phone_primary,
-                  crm_external_id: client.id,
-                  is_active: !client.is_archived && client.status !== 'inactive',
+                  crm_external_id: user.id,
+                  ...brokerData,
                 })
               }
               processed++
             } catch (error) {
-              console.error('[Vetor Sync] Error syncing client ' + client.id + ':', error)
+              console.error('[Vetor Sync] Error syncing user ' + user.id + ':', error)
             }
           }
 
@@ -286,6 +277,17 @@ export function startVetorSyncJob(cronExpression: string = '*/30 * * * *') {
                 exclusividade: vetorDeal.exclusividade || undefined,
                 origem: vetorDeal.origem || vetorDeal.source || undefined,
                 updated_at: new Date(),
+              }
+
+              // Log first deal for debug
+              if (processed === 0) {
+                console.log('[Vetor Sync] Sample deal data:', JSON.stringify({
+                  id: vetorDeal.id,
+                  stage: vetorDeal.stage,
+                  exclusividade: vetorDeal.exclusividade,
+                  origem: vetorDeal.origem,
+                  potential_commission: vetorDeal.potential_commission,
+                }))
               }
 
               if (existingDeal) {
