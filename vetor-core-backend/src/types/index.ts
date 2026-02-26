@@ -116,6 +116,7 @@ export interface ActivityLog {
   description: string
   metadata: Record<string, unknown> | null
   created_at: Date
+  updated_at: Date
 }
 
 // Sync Log
@@ -162,6 +163,7 @@ export interface VetorDeal {
   source?: string
   last_activity_at?: string
   created_at: string
+  updated_at: string
 }
 
 export interface VetorNote {

@@ -95,6 +95,7 @@ export const activityLogs = pgTable('activity_logs', {
   description: text('description').notNull(),
   metadata: jsonb('metadata'),
   created_at: timestamp('created_at').defaultNow().notNull(),
+  updated_at: timestamp('updated_at').defaultNow().notNull(),
 })
 
 // Sync Logs Table

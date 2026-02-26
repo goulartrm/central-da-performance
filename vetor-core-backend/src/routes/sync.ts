@@ -190,13 +190,13 @@ export default async function syncRoutes(fastify: FastifyInstance) {
                 status: mapVetorStage(vetorDeal.stage),
                 potential_value: vetorDeal.potential_value ? String(vetorDeal.potential_value) : undefined,
                 last_activity: vetorDeal.last_activity_at ? new Date(vetorDeal.last_activity_at) : undefined,
-                updated_at: new Date(),
+                updated_at: vetorDeal.updated_at ? new Date(vetorDeal.updated_at) : new Date(),
               }
 
               let dealId: string
 
               if (existingDeal) {
-                // Update existing deal
+                // Update existing deal - preserve created_at from CRM
                 await db
                   .update(deals)
                   .set(dealData)
@@ -204,14 +204,14 @@ export default async function syncRoutes(fastify: FastifyInstance) {
                 dealId = existingDeal.id
                 dealsUpdated++
               } else {
-                // Create new deal
+                // Create new deal - use CRM created_at
                 const newDealId = crypto.randomUUID()
                 await db
                   .insert(deals)
                   .values({
                     ...dealData,
                     id: newDealId,
-                    created_at: new Date(),
+                    created_at: vetorDeal.created_at ? new Date(vetorDeal.created_at) : new Date(),
                   })
                 dealId = newDealId
                 dealsCreated++
@@ -219,6 +219,7 @@ export default async function syncRoutes(fastify: FastifyInstance) {
 
               // Create activity log from notes if present
               if (vetorDeal.notes && dealId) {
+                const noteDate = vetorDeal.created_date ? new Date(vetorDeal.created_date) : new Date()
                 await db
                   .insert(activityLogs)
                   .values({
@@ -226,7 +227,8 @@ export default async function syncRoutes(fastify: FastifyInstance) {
                     deal_id: dealId,
                     type: 'note',
                     description: vetorDeal.notes,
-                    created_at: new Date(vetorDeal.created_date),
+                    created_at: noteDate,
+                    updated_at: noteDate,
                   })
               }
 
