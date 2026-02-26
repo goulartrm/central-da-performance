@@ -167,6 +167,8 @@ export function DealsTable() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [brokerFilter, setBrokerFilter] = useState<string>("all");
   const [brokers, setBrokers] = useState<string[]>([]);
+  const [dateFromFilter, setDateFromFilter] = useState<string>("");
+  const [dateToFilter, setDateToFilter] = useState<string>("");
 
   // Data states
   const [deals, setDeals] = useState<Deal[]>([]);
@@ -223,6 +225,20 @@ export function DealsTable() {
     // Broker filter
     if (brokerFilter !== "all" && deal.broker_name !== brokerFilter) {
       return false;
+    }
+
+    // Date filter
+    if (dateFromFilter && deal.created_at) {
+      const dealDate = new Date(deal.created_at);
+      const fromDate = new Date(dateFromFilter);
+      if (dealDate < fromDate) return false;
+    }
+
+    if (dateToFilter && deal.created_at) {
+      const dealDate = new Date(deal.created_at);
+      const toDate = new Date(dateToFilter);
+      toDate.setHours(23, 59, 59, 999); // End of the day
+      if (dealDate > toDate) return false;
     }
 
     return true;
@@ -420,12 +436,24 @@ export function DealsTable() {
                 ))}
               </SelectContent>
             </Select>
+            <Input
+              type="date"
+              value={dateFromFilter}
+              onChange={(e) => { setDateFromFilter(e.target.value); setPage(1); }}
+              className="w-36 h-9 border border-border/50 bg-white text-sm"
+            />
+            <Input
+              type="date"
+              value={dateToFilter}
+              onChange={(e) => { setDateToFilter(e.target.value); setPage(1); }}
+              className="w-36 h-9 border border-border/50 bg-white text-sm"
+            />
           </div>
         </div>
       </div>
 
       {/* Table */}
-      <ScrollArea className="flex-1 saas-scrollbar">
+      <div className="flex-1 overflow-auto">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-16">
             <Loader2 className="h-8 w-8 animate-spin text-muted-500" />
@@ -446,9 +474,9 @@ export function DealsTable() {
             <p className="text-xs text-muted-400 mt-1">Tente mudar os filtros ou sincronizar os dados</p>
           </div>
         ) : (
-          <div className="flex flex-col">
+          <div className="flex flex-col h-full">
             {/* Table with horizontal scroll */}
-            <div className="relative overflow-x-auto">
+            <div className="relative overflow-x-auto flex-1">
               {/* Mobile scroll hint */}
               <div className="md:hidden text-xs text-muted-500 text-center py-2 border-b border-border/30">
                 ← Deslize para ver mais →
@@ -699,7 +727,7 @@ export function DealsTable() {
         )}
 
         {/* Pagination Controls */}
-        {!isLoading && !error && deals.length > 0 && totalPages > 1 && (
+        {!isLoading && !error && filteredDeals.length > 0 && totalPages > 1 && (
           <div className="border-t border-border/50 bg-muted-30/30 px-4 py-3">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               {/* Page info */}
@@ -803,7 +831,7 @@ export function DealsTable() {
             </div>
           </div>
         )}
-      </ScrollArea>
+      </div>
     </div>
   );
 }
