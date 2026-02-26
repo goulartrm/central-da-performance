@@ -168,8 +168,12 @@ export function DealsTable() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [brokerFilter, setBrokerFilter] = useState<string>("all");
   const [brokers, setBrokers] = useState<string[]>([]);
-  const [dateFromFilter, setDateFromFilter] = useState<string>("");
-  const [dateToFilter, setDateToFilter] = useState<string>("");
+  // Created date filters
+  const [createdFromFilter, setCreatedFromFilter] = useState<string>("");
+  const [createdToFilter, setCreatedToFilter] = useState<string>("");
+  // Updated date filters
+  const [updatedFromFilter, setUpdatedFromFilter] = useState<string>("");
+  const [updatedToFilter, setUpdatedToFilter] = useState<string>("");
 
   // Data states
   const [deals, setDeals] = useState<Deal[]>([]);
@@ -199,8 +203,10 @@ export function DealsTable() {
         limit,
         ...(statusFilter !== "all" && { status: statusFilter }),
         ...(sentimentFilter !== "all" && { sentiment: sentimentFilter }),
-        ...(dateFromFilter && { date_from: dateFromFilter }),
-        ...(dateToFilter && { date_to: dateToFilter }),
+        ...(createdFromFilter && { created_from: createdFromFilter }),
+        ...(createdToFilter && { created_to: createdToFilter }),
+        ...(updatedFromFilter && { updated_from: updatedFromFilter }),
+        ...(updatedToFilter && { updated_to: updatedToFilter }),
       });
       setDeals(response.deals);
       setTotal(response.total);
@@ -213,7 +219,7 @@ export function DealsTable() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, statusFilter, sentimentFilter, dateFromFilter, dateToFilter, limit]);
+  }, [page, statusFilter, sentimentFilter, createdFromFilter, createdToFilter, updatedFromFilter, updatedToFilter, limit]);
 
   // Client-side filtering for search and broker (date is now server-side)
   const filteredDeals = deals.filter(deal => {
@@ -425,32 +431,61 @@ export function DealsTable() {
                 ))}
               </SelectContent>
             </Select>
-            <div className="flex items-center gap-1">
-              <span className="text-xs text-muted-500">De:</span>
+            {/* Created date filters */}
+            <div className="flex items-center gap-1 border-r border-border/30 pr-2">
+              <span className="text-xs text-muted-500">Criado:</span>
+              <span className="text-xs text-muted-400">de</span>
               <Input
                 type="date"
-                value={dateFromFilter}
-                onChange={(e) => { setDateFromFilter(e.target.value); setPage(1); }}
-                className="w-32 h-9 border border-border/50 bg-white text-sm"
+                value={createdFromFilter}
+                onChange={(e) => { setCreatedFromFilter(e.target.value); setPage(1); }}
+                className="w-28 h-9 border border-border/50 bg-white text-sm"
               />
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="text-xs text-muted-500">Até:</span>
+              <span className="text-xs text-muted-400">até</span>
               <Input
                 type="date"
-                value={dateToFilter}
-                onChange={(e) => { setDateToFilter(e.target.value); setPage(1); }}
-                className="w-32 h-9 border border-border/50 bg-white text-sm"
+                value={createdToFilter}
+                onChange={(e) => { setCreatedToFilter(e.target.value); setPage(1); }}
+                className="w-28 h-9 border border-border/50 bg-white text-sm"
               />
-              {(dateFromFilter || dateToFilter) && (
+              {(createdFromFilter || createdToFilter) && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-9 w-9 p-0 text-muted-500 hover:text-foreground"
-                  onClick={() => { setDateFromFilter(''); setDateToFilter(''); setPage(1); }}
-                  title="Limpar filtro de data"
+                  className="h-9 w-7 p-0 text-muted-500 hover:text-foreground"
+                  onClick={() => { setCreatedFromFilter(''); setCreatedToFilter(''); setPage(1); }}
+                  title="Limpar filtro de criação"
                 >
-                  <X className="h-4 w-4" strokeWidth={2} />
+                  <X className="h-3 w-3" strokeWidth={2} />
+                </Button>
+              )}
+            </div>
+            {/* Updated date filters */}
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-muted-500">Atualizado:</span>
+              <span className="text-xs text-muted-400">de</span>
+              <Input
+                type="date"
+                value={updatedFromFilter}
+                onChange={(e) => { setUpdatedFromFilter(e.target.value); setPage(1); }}
+                className="w-28 h-9 border border-border/50 bg-white text-sm"
+              />
+              <span className="text-xs text-muted-400">até</span>
+              <Input
+                type="date"
+                value={updatedToFilter}
+                onChange={(e) => { setUpdatedToFilter(e.target.value); setPage(1); }}
+                className="w-28 h-9 border border-border/50 bg-white text-sm"
+              />
+              {(updatedFromFilter || updatedToFilter) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-9 w-7 p-0 text-muted-500 hover:text-foreground"
+                  onClick={() => { setUpdatedFromFilter(''); setUpdatedToFilter(''); setPage(1); }}
+                  title="Limpar filtro de atualização"
+                >
+                  <X className="h-3 w-3" strokeWidth={2} />
                 </Button>
               )}
             </div>

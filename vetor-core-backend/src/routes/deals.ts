@@ -12,8 +12,10 @@ interface DealsQuery {
   sentiment?: Sentiment
   broker_id?: string
   search?: string
-  date_from?: string
-  date_to?: string
+  created_from?: string
+  created_to?: string
+  updated_from?: string
+  updated_to?: string
 }
 
 export default async function dealsRoutes(fastify: FastifyInstance) {
@@ -63,19 +65,36 @@ export default async function dealsRoutes(fastify: FastifyInstance) {
       }
 
       // Date filtering - filter by created_at date
-      if (query.date_from) {
-        const fromDate = new Date(query.date_from)
+      if (query.created_from) {
+        const fromDate = new Date(query.created_from)
         if (!isNaN(fromDate.getTime())) {
           conditions.push(gte(deals.created_at, fromDate))
         }
       }
 
-      if (query.date_to) {
-        const toDate = new Date(query.date_to)
+      if (query.created_to) {
+        const toDate = new Date(query.created_to)
         if (!isNaN(toDate.getTime())) {
           // Set to end of the day
           toDate.setHours(23, 59, 59, 999)
           conditions.push(lte(deals.created_at, toDate))
+        }
+      }
+
+      // Updated at date filtering
+      if (query.updated_from) {
+        const fromDate = new Date(query.updated_from)
+        if (!isNaN(fromDate.getTime())) {
+          conditions.push(gte(deals.updated_at, fromDate))
+        }
+      }
+
+      if (query.updated_to) {
+        const toDate = new Date(query.updated_to)
+        if (!isNaN(toDate.getTime())) {
+          // Set to end of the day
+          toDate.setHours(23, 59, 59, 999)
+          conditions.push(lte(deals.updated_at, toDate))
         }
       }
 

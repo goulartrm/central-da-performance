@@ -298,7 +298,7 @@ export function startVetorSyncJob(cronExpression: string = '*/30 * * * *') {
                 potential_commission: vetorDeal.potential_commission || undefined,
                 exclusividade: vetorDeal.exclusividade || undefined,
                 origem: vetorDeal.origem || vetorDeal.source || undefined,
-                updated_at: new Date(),
+                updated_at: vetorDeal.updated_date ? new Date(vetorDeal.updated_date) : new Date(),
               }
 
               // Log first deal for debug
@@ -320,7 +320,7 @@ export function startVetorSyncJob(cronExpression: string = '*/30 * * * *') {
                 await db.insert(deals).values({
                   ...dealData,
                   id: crypto.randomUUID(),
-                  created_at: new Date(),
+                  created_at: vetorDeal.created_date ? new Date(vetorDeal.created_date) : new Date(),
                 })
               }
               processed++
