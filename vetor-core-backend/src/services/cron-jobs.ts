@@ -1,4 +1,5 @@
-import { eq } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
+import { sql } from 'drizzle-orm'
 import { createMadaSyncService } from './mada-sync.js'
 import { VetorImobiAdapter } from './vetor-api.js'
 import { db, withRetry } from '../db/index.js'
@@ -110,6 +111,16 @@ async function syncVetorNotes(organizationId: string, apiKey: string, companyId?
         // Skip archived notes
         if (note.is_archived) continue
 
+        // Check if activity log with this crm_note_id already exists
+        const [existing] = await db.select()
+          .from(activityLogs)
+          .where(
+            and(
+              eq(activityLogs.type, 'note'),
+              sql`${activityLogs.metadata}->>'crm_note_id' = ${note.id}`
+            )
+          )
+
         // Find related deal if deal_id exists
         let dealId = null
         if (note.deal_id) {
@@ -120,11 +131,9 @@ async function syncVetorNotes(organizationId: string, apiKey: string, companyId?
           dealId = deal?.id || null
         }
 
-        // Create activity log for the note
-        await db.insert(activityLogs).values({
-          id: crypto.randomUUID(),
-          deal_id: dealId || crypto.randomUUID(), // TODO: handle notes without deals better
-          type: 'note',
+        const noteData = {
+          deal_id: dealId,
+          type: 'note' as const,
           description: note.content || note.title || '',
           metadata: {
             crm_note_id: note.id,
@@ -141,7 +150,20 @@ async function syncVetorNotes(organizationId: string, apiKey: string, companyId?
             client_id: note.client_id,
           },
           created_at: new Date(note.created_date || note.updated_date || Date.now()),
-        }).onConflictDoNothing() // Avoid duplicates
+        }
+
+        if (existing) {
+          // Update existing note
+          await db.update(activityLogs)
+            .set(noteData)
+            .where(eq(activityLogs.id, existing.id))
+        } else {
+          // Insert new note
+          await db.insert(activityLogs).values({
+            id: crypto.randomUUID(),
+            ...noteData,
+          })
+        }
       } catch (error) {
         console.error('[Vetor Notes Sync] Error syncing note ' + note.id + ':', error)
       }
